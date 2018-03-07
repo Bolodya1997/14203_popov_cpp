@@ -10,6 +10,7 @@
 
 template <class TKey, class TValue, class THash = std::hash<TKey>>
 class EvictingCacheMap final {
+private:
     struct Node;
 
 public:
@@ -23,10 +24,9 @@ public:
         std::pair<const TKey, TValue> * operator->();
 
         iterator & operator++();
-        iterator & operator++(int);
+        iterator operator++(int);
 
     private:
-//        static const std::string OUT_OF_RANGE;
         static constexpr const char *OUT_OF_RANGE = "Iterator is out of range";
 
         iterator(Node * node);
@@ -36,7 +36,7 @@ public:
         std::pair<const TKey, TValue> & dereference() const;
 
         friend class const_iterator;
-        friend class EvictingCacheMap;
+        friend class EvictingCacheMap<TKey, TValue, THash>;
     };
 
     class const_iterator: public std::iterator<std::input_iterator_tag,
@@ -49,14 +49,15 @@ public:
         const std::pair<const TKey, TValue> * operator->() const;;
 
         const_iterator & operator++();
-        const_iterator & operator++(int);
+        const_iterator operator++(int);
 
     private:
         const_iterator(Node * node);
 
-        iterator it = iterator(nullptr);
+        EvictingCacheMap<TKey, TValue, THash>::iterator it
+                = EvictingCacheMap<TKey, TValue, THash>::iterator(nullptr);
 
-        friend class EvictingCacheMap;
+        friend class EvictingCacheMap<TKey, TValue, THash>;
     };
 
     /**
@@ -200,7 +201,7 @@ operator++() {
 }
 
 template<class TKey, class TValue, class THash>
-inline class EvictingCacheMap<TKey, TValue, THash>::iterator &
+inline class EvictingCacheMap<TKey, TValue, THash>::iterator
 EvictingCacheMap<TKey, TValue, THash>::iterator::
 operator++(int) {
     iterator res = *this;
@@ -208,10 +209,6 @@ operator++(int) {
 
     return res;
 }
-
-//template <class TKey, class TValue, class THash>
-//const std::string EvictingCacheMap<TKey, TValue, THash>::iterator::OUT_OF_RANGE
-//        = "Iterator is out of range";
 
 template<class TKey, class TValue, class THash>
 EvictingCacheMap<TKey, TValue, THash>::iterator::
@@ -264,7 +261,7 @@ EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator++() {
 }
 
 template<class TKey, class TValue, class THash>
-inline class EvictingCacheMap<TKey, TValue, THash>::const_iterator &
+inline class EvictingCacheMap<TKey, TValue, THash>::const_iterator
 EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator++(int) {
     const_iterator res = *this;
     ++*this;
@@ -353,7 +350,7 @@ template<class TKey, class TValue, class THash>
 class EvictingCacheMap<TKey, TValue, THash>::iterator
 EvictingCacheMap<TKey, TValue, THash>::
 find(const TKey & key) {
-    return iterator(nullptr);
+    return EvictingCacheMap<TKey, TValue, THash>::iterator(nullptr);
 }
 
 template<class TKey, class TValue, class THash>
@@ -414,15 +411,15 @@ begin() const noexcept {
 }
 
 template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::
-const_iterator EvictingCacheMap<TKey, TValue, THash>::
+class EvictingCacheMap<TKey, TValue, THash>::const_iterator
+EvictingCacheMap<TKey, TValue, THash>::
 end() const noexcept {
     return const_iterator(nullptr);
 }
 
 template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::
-const_iterator EvictingCacheMap<TKey, TValue, THash>::
+class EvictingCacheMap<TKey, TValue, THash>::const_iterator
+EvictingCacheMap<TKey, TValue, THash>::
 cbegin() const noexcept {
     return begin();
 }

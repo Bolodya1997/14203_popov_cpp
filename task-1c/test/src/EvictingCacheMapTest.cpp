@@ -196,17 +196,160 @@ TEST_F(EvictingCacheMapTest, MoveAssignmentOrder) {
         map0.put(i, i);
     }
 
-    auto vec = vector<pair<const int, int>>();
+    auto vec = vector<pair<int, int>>();
     for (auto && kv : map0) {
         vec.push_back(kv);
     }
 
     auto map1 = map0;
-    ASSERT_EQ(map1.size(), 10);
+    ASSERT_EQ(map1.size(), 10u);
 
     auto it = map1.begin();
     for (int i = 0; i < 10; ++i, ++it) {
         ASSERT_EQ(it->first, vec[i].first);
         ASSERT_EQ(it->second, vec[i].second);
     }
+}
+
+//  exists
+
+TEST_F(EvictingCacheMapTest, Exists) {
+    auto map = EvictingCacheMap<int, int>(2);
+    map.put(1, 2);
+    map.put(3, 4);
+
+    map.get(3);     //  put {3, 4} on the top of the queue
+    map.put(5, 6);  //  evict {1, 2}
+
+    ASSERT_FALSE(map.exists(1));
+    ASSERT_TRUE(map.exists(3));
+}
+
+//  find
+
+TEST_F(EvictingCacheMapTest, Find) {
+    auto map = EvictingCacheMap<int, int>(2);
+    map.put(1, 2);
+    map.put(3, 4);
+
+    auto it = map.find(3);  //  put {3, 4} on the top of the queue
+    ASSERT_EQ(it->second, 4);
+
+    map.put(5, 6);  //  evict {1, 2}
+
+    it = map.find(1);
+    ASSERT_EQ(it, map.end());
+}
+
+//  erase
+
+TEST_F(EvictingCacheMapTest, Erase) {
+    auto map = EvictingCacheMap<int, int>(2);
+    map.put(1, 2);
+    map.put(3, 4);
+
+    ASSERT_TRUE(map.erase(1));
+    ASSERT_FALSE(map.erase(8));
+
+    ASSERT_FALSE(map.exists(1));
+    ASSERT_TRUE(map.exists(3));
+    ASSERT_EQ(map.size(), 2u);
+}
+
+//  empty, clear, size
+
+TEST_F(EvictingCacheMapTest, EmptyClear) {
+    auto map = EvictingCacheMap<int, int>(2);
+    ASSERT_TRUE(map.empty());
+    ASSERT_EQ(map.size(), 0u);
+
+    map.put(1, 2);
+    ASSERT_FALSE(map.empty());
+    ASSERT_EQ(map.size(), 1u);
+
+    map.clear();
+    ASSERT_TRUE(map.empty());
+    ASSERT_EQ(map.size(), 0u);
+}
+
+// iterator
+
+TEST_F(EvictingCacheMapTest, Iterator) {
+    auto map = EvictingCacheMap<int, int>(5);
+    ASSERT_TRUE(map.begin() == map.end());
+
+    map.put(1, 2);
+    map.put(3, 4);
+    map.put(5, 6);
+    map.put(7, 8);
+    map.get(1);     //  4
+    map.get(3);     //  3
+    map.get(5);     //  2
+    map.get(7);     //  1
+
+    auto && it = map.begin();
+    ASSERT_EQ((*it).first, 7);
+    ASSERT_EQ(it->second, 8);
+
+    auto && tmp = it++;
+    ASSERT_TRUE(tmp != it);
+    ASSERT_EQ((*tmp).first, 7);
+    ASSERT_EQ(tmp->second, 8);
+    ASSERT_EQ((*it).first, 5);
+    ASSERT_EQ(it->second, 6);
+
+    tmp = ++it;
+    ASSERT_TRUE(tmp == it);
+    ASSERT_EQ((*it).first, 3);
+    ASSERT_EQ(it->second, 4);
+
+    ++it;
+    ASSERT_EQ((*it).first, 1);
+    ASSERT_EQ(it->second, 2);
+
+    ++it;
+    ASSERT_TRUE(it == map.end());
+}
+
+//  const_iterator
+
+TEST_F(EvictingCacheMapTest, ConstIterator) {
+    auto __map = EvictingCacheMap<int, int>(5);
+    const auto & map = __map;
+    ASSERT_TRUE(map.begin() == map.end());
+
+    __map.put(1, 2);
+    __map.put(3, 4);
+    __map.put(5, 6);
+    __map.put(7, 8);
+    __map.get(1);   //  4
+    __map.get(3);   //  3
+    __map.get(5);   //  2
+    __map.get(7);   //  1
+
+    auto && it = map.begin();
+    ASSERT_EQ((*it).first, 7);
+    ASSERT_EQ(it->second, 8);
+
+    auto && tmp = it++;
+    ASSERT_TRUE(tmp != it);
+    ASSERT_EQ((*tmp).first, 7);
+    ASSERT_EQ(tmp->second, 8);
+    ASSERT_EQ((*it).first, 5);
+    ASSERT_EQ(it->second, 6);
+
+    tmp = ++it;
+    ASSERT_TRUE(tmp == it);
+    ASSERT_EQ((*it).first, 3);
+    ASSERT_EQ(it->second, 4);
+
+    ++it;
+    ASSERT_EQ((*it).first, 1);
+    ASSERT_EQ(it->second, 2);
+
+    ++it;
+    ASSERT_TRUE(it == map.end());
+
+    ASSERT_TRUE(map.cbegin() == map.begin());
+    ASSERT_TRUE(map.cend() == map.end());
 }
