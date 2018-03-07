@@ -11,14 +11,12 @@ public:
     public:
         Trace() = default;
 
-        const int & getConstructorCalls() const noexcept;
         const int & getCopyCalls() const noexcept;
-        const int & getDestructorCalls() const noexcept;
+        const bool & isAlive() const noexcept;
 
     private:
-        int constructorCalls = 0;
         int copyCalls = 0;
-        int destructorCalls = 0;
+        bool alive = true;
 
         friend class Traceable;
     };
@@ -27,7 +25,7 @@ public:
     explicit Traceable(Trace & trace) noexcept;
 
     Traceable(const Traceable & other) noexcept;
-    Traceable(Traceable && other) noexcept;
+    Traceable(Traceable && other) noexcept = default;
 
     ~Traceable();
 

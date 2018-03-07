@@ -20,7 +20,7 @@ public:
         bool operator!=(const iterator & other) const noexcept;
 
         std::pair<const TKey, TValue> & operator*();
-        std::pair<const TKey, TValue> & operator->();
+        std::pair<const TKey, TValue> * operator->();
 
         iterator & operator++();
         iterator & operator++(int);
@@ -46,7 +46,7 @@ public:
         bool operator!=(const const_iterator & other) const noexcept;
 
         const std::pair<const TKey, TValue> & operator*() const;
-        const std::pair<const TKey, TValue> & operator->() const;;
+        const std::pair<const TKey, TValue> * operator->() const;;
 
         const_iterator & operator++();
         const_iterator & operator++(int);
@@ -112,7 +112,7 @@ public:
      * @param value value to associate with the key
      */
     template <class T, class E>
-    void put(const T && key, const E && value);
+    void put(T && key, E && value);
 
     /**
      * Get the number of elements in the dictionary
@@ -182,10 +182,10 @@ operator*() {
 }
 
 template<class TKey, class TValue, class THash>
-inline std::pair<const TKey, TValue> &
+inline std::pair<const TKey, TValue> *
 EvictingCacheMap<TKey, TValue, THash>::iterator::
 operator->() {
-    return **this;
+    return &dereference();
 }
 
 template<class TKey, class TValue, class THash>
@@ -251,9 +251,9 @@ EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator*() const {
 }
 
 template<class TKey, class TValue, class THash>
-inline const std::pair<const TKey, TValue> &
+inline const std::pair<const TKey, TValue> *
 EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator->() const {
-    return **this;
+    return &it.dereference();
 }
 
 template<class TKey, class TValue, class THash>
@@ -367,7 +367,7 @@ template<class TKey, class TValue, class THash>
 template<class T, class E>
 void
 EvictingCacheMap<TKey, TValue, THash>::
-put(const T && key, const E && value) {
+put(T && key, E && value) {
 
 }
 
