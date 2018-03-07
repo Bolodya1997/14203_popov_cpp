@@ -1,0 +1,6 @@
+# Clion project files
+**/.idea
+**/cmake-build-debug
+
+# binaries
+**/bin
