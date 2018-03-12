@@ -46,7 +46,7 @@ public:
         bool operator!=(const const_iterator & other) const noexcept;
 
         const std::pair<const TKey, TValue> & operator*() const;
-        const std::pair<const TKey, TValue> * operator->() const;;
+        const std::pair<const TKey, TValue> * operator->() const;
 
         const_iterator & operator++();
         const_iterator operator++(int);

@@ -3,6 +3,7 @@ include(ExternalProject)
 ##################################################
 #   gtest
 ##################################################
+
 find_package(Threads REQUIRED)
 
 # Use GIT if you can, if not - use URL
@@ -54,4 +55,3 @@ set(GTEST_LIB
 set(GTEST_INCLUDE
         ${source_dir}/googletest/include
         ${source_dir}/googlemock/include PARENT_SCOPE)
-
