@@ -1,6 +1,8 @@
 # Clion project files
 **/.idea
-**/cmake-build-debug
+
+# CMake build files
+**/build
 
 # binaries
 **/bin
