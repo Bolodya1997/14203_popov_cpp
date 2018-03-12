@@ -2,13 +2,13 @@
 
 //  Traceable::Trace
 
-const int &
+int
 Traceable::Trace::
 getCopyCalls() const noexcept {
     return copyCalls;
 }
 
-const bool &
+bool
 Traceable::Trace::
 isAlive() const noexcept {
     return alive;

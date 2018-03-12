@@ -11,8 +11,8 @@ public:
     public:
         Trace() = default;
 
-        const int & getCopyCalls() const noexcept;
-        const bool & isAlive() const noexcept;
+        int getCopyCalls() const noexcept;
+        bool isAlive() const noexcept;
 
     private:
         int copyCalls = 0;

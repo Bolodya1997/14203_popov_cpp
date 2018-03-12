@@ -13,49 +13,36 @@ class EvictingCacheMap final {
 private:
     struct Node;
 
+    template <class It, class V>
+    class BaseIterator;
+
 public:
-    class iterator: public std::iterator<std::input_iterator_tag,
-            std::pair<const TKey, TValue>> {
+    class iterator :
+            public BaseIterator<iterator, std::pair<const TKey, TValue>> {
     public:
-        bool operator==(const iterator & other) const noexcept;
-        bool operator!=(const iterator & other) const noexcept;
+        iterator() = default;
 
-        std::pair<const TKey, TValue> & operator*();
-        std::pair<const TKey, TValue> * operator->();
+        iterator(const iterator & other) = default;
 
-        iterator & operator++();
-        iterator operator++(int);
+        ~iterator() override = default;
 
     private:
-        static constexpr const char *OUT_OF_RANGE = "Iterator is out of range";
+        explicit iterator(Node * node);
 
-        iterator(Node * node);
-
-        Node * node = nullptr;
-
-        std::pair<const TKey, TValue> & dereference() const;
-
-        friend class const_iterator;
         friend class EvictingCacheMap<TKey, TValue, THash>;
     };
 
-    class const_iterator: public std::iterator<std::input_iterator_tag,
-            std::pair<const TKey, TValue>> {
+    class const_iterator :
+            public BaseIterator<const_iterator, const std::pair<const TKey, TValue>> {
     public:
-        bool operator==(const const_iterator & other) const noexcept;
-        bool operator!=(const const_iterator & other) const noexcept;
+        const_iterator() = default;
 
-        const std::pair<const TKey, TValue> & operator*() const;
-        const std::pair<const TKey, TValue> * operator->() const;
+        const_iterator(const const_iterator & other) = default;
 
-        const_iterator & operator++();
-        const_iterator operator++(int);
+        ~const_iterator() override = default;
 
     private:
-        const_iterator(Node * node);
-
-        EvictingCacheMap<TKey, TValue, THash>::iterator it
-                = EvictingCacheMap<TKey, TValue, THash>::iterator(nullptr);
+        explicit const_iterator(Node * node);
 
         friend class EvictingCacheMap<TKey, TValue, THash>;
     };
@@ -70,7 +57,7 @@ public:
     EvictingCacheMap(const EvictingCacheMap & other);
     EvictingCacheMap(EvictingCacheMap && other);
 
-    ~EvictingCacheMap();
+    ~EvictingCacheMap() = default;
 
     EvictingCacheMap & operator=(const EvictingCacheMap & other);
     EvictingCacheMap & operator=(EvictingCacheMap && other);
@@ -142,13 +129,49 @@ public:
 private:
     struct Node {
         Node() = delete;
-        Node(const Node & other) = delete;
         explicit Node(TKey && key, TValue && value);
+
+        Node(const Node & other) = delete;
+        Node(Node && other) = default;
 
         std::pair<const TKey, TValue> data;
 
         Node * prev = nullptr;
         Node * next = nullptr;
+    };
+
+    template <class It, class V>
+    class BaseIterator {
+    public:
+        using difference_type = std::ptrdiff_t;
+        using value_type = V;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using iterator_category = std::forward_iterator_tag;
+
+        BaseIterator();
+        virtual ~BaseIterator() = default;
+
+        explicit BaseIterator(const It & other);
+
+        BaseIterator & operator=(const It & other);
+
+        bool operator==(const It & other) const noexcept;
+        bool operator!=(const It & other) const noexcept;
+
+        reference operator*() const;
+        pointer operator->() const;
+
+        It & operator++();
+        It operator++(int);
+
+    protected:
+        explicit BaseIterator(Node * node);
+
+    private:
+        static constexpr const char *OUT_OF_RANGE = "Iterator is out of range";
+
+        Node * node;
     };
 
     std::size_t capacity;
@@ -157,286 +180,13 @@ private:
 
     Node * tail = nullptr;
     Node * head = nullptr;
+
+    size_t keyToPos(const TKey & key) const noexcept;
+
+    const Node * findNode(const TKey & key) const;
+    void promoteToHead(Node * node) noexcept;
 };
 
-//  EvictingCacheMap::iterator
-
-template<class TKey, class TValue, class THash>
-inline bool
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-operator==(const EvictingCacheMap::iterator & other) const noexcept {
-    return node == other.node;
-}
-
-template<class TKey, class TValue, class THash>
-inline bool
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-operator!=(const EvictingCacheMap::iterator & other) const noexcept {
-    return !(*this == other);
-}
-
-template<class TKey, class TValue, class THash>
-inline std::pair<const TKey, TValue> &
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-operator*() {
-    return dereference();
-}
-
-template<class TKey, class TValue, class THash>
-inline std::pair<const TKey, TValue> *
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-operator->() {
-    return &dereference();
-}
-
-template<class TKey, class TValue, class THash>
-inline class EvictingCacheMap<TKey, TValue, THash>::iterator &
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-operator++() {
-    if (node == nullptr)
-        throw std::out_of_range(OUT_OF_RANGE);
-    node = node->next;
-
-    return *this;
-}
-
-template<class TKey, class TValue, class THash>
-inline class EvictingCacheMap<TKey, TValue, THash>::iterator
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-operator++(int) {
-    iterator res = *this;
-    ++*this;
-
-    return res;
-}
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-iterator(EvictingCacheMap::Node * node)
-        : node(node) {
-}
-
-template<class TKey, class TValue, class THash>
-inline std::pair<const TKey, TValue> &
-EvictingCacheMap<TKey, TValue, THash>::iterator::
-dereference() const {
-    if (node == nullptr)
-        throw std::out_of_range(OUT_OF_RANGE);
-    return node->data;
-}
-
-//  EvictingCacheMap::const_iterator
-
-template<class TKey, class TValue, class THash>
-inline bool
-EvictingCacheMap<TKey, TValue, THash>::const_iterator::
-operator==(const EvictingCacheMap::const_iterator & other) const noexcept {
-    return it == other.it;
-}
-
-template<class TKey, class TValue, class THash>
-inline bool
-EvictingCacheMap<TKey, TValue, THash>::const_iterator::
-operator!=(const EvictingCacheMap::const_iterator & other) const noexcept {
-    return !(*this == other);
-}
-
-template<class TKey, class TValue, class THash>
-inline const std::pair<const TKey, TValue> &
-EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator*() const {
-    return const_cast<const std::pair<const TKey, TValue> &>(it.dereference());
-}
-
-template<class TKey, class TValue, class THash>
-inline const std::pair<const TKey, TValue> *
-EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator->() const {
-    return &it.dereference();
-}
-
-template<class TKey, class TValue, class THash>
-inline class EvictingCacheMap<TKey, TValue, THash>::const_iterator &
-EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator++() {
-    ++it;
-    return *this;
-}
-
-template<class TKey, class TValue, class THash>
-inline class EvictingCacheMap<TKey, TValue, THash>::const_iterator
-EvictingCacheMap<TKey, TValue, THash>::const_iterator::operator++(int) {
-    const_iterator res = *this;
-    ++*this;
-
-    return res;
-}
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::
-const_iterator::const_iterator(EvictingCacheMap::Node * node)
-        : it(node) {
-}
-
-//  EvictingCacheMap
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::
-EvictingCacheMap(std::size_t capacity)
-        : capacity(capacity) {
-}
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::
-EvictingCacheMap(const EvictingCacheMap & other) {
-    *this = other;
-}
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::
-EvictingCacheMap(EvictingCacheMap && other) {
-    *this = std::move(other);
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash> &
-EvictingCacheMap<TKey, TValue, THash>::
-operator=(const EvictingCacheMap & other) {
-    if (this == &other)
-        return *this;
-
-    capacity = other.capacity;
-
-    hashTable.clear();
-    for (auto && [k, v] : other) {
-        put(k, v);
-    }
-
-    return *this;
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash> &
-EvictingCacheMap<TKey, TValue, THash>::
-operator=(EvictingCacheMap && other) {
-    if (this == &other)
-        return *this;
-
-    capacity = other.capacity;
-    hashTable = std::move(other.hashTable);
-    tail = other.tail;
-    head = other.head;
-
-    return *this;
-}
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::
-~EvictingCacheMap() {
-}
-
-template<class TKey, class TValue, class THash>
-bool
-EvictingCacheMap<TKey, TValue, THash>::
-exists(const TKey & key) const {
-    return false;
-}
-
-template<class TKey, class TValue, class THash>
-std::optional<TValue>
-EvictingCacheMap<TKey, TValue, THash>::
-get(const TKey & key) {
-    return {};
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::iterator
-EvictingCacheMap<TKey, TValue, THash>::
-find(const TKey & key) {
-    return EvictingCacheMap<TKey, TValue, THash>::iterator(nullptr);
-}
-
-template<class TKey, class TValue, class THash>
-bool
-EvictingCacheMap<TKey, TValue, THash>::
-erase(const TKey & key) {
-    return false;
-}
-
-template<class TKey, class TValue, class THash>
-template<class T, class E>
-void
-EvictingCacheMap<TKey, TValue, THash>::
-put(T && key, E && value) {
-
-}
-
-template<class TKey, class TValue, class THash>
-std::size_t
-EvictingCacheMap<TKey, TValue, THash>::
-size() const {
-    return 0;
-}
-
-template<class TKey, class TValue, class THash>
-bool
-EvictingCacheMap<TKey, TValue, THash>::
-empty() const {
-    return false;
-}
-
-template<class TKey, class TValue, class THash>
-void
-EvictingCacheMap<TKey, TValue, THash>::
-clear() {
-
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::iterator
-EvictingCacheMap<TKey, TValue, THash>::
-begin() noexcept {
-    return iterator(head);
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::iterator
-EvictingCacheMap<TKey, TValue, THash>::
-end() noexcept {
-    return iterator(nullptr);
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::const_iterator
-EvictingCacheMap<TKey, TValue, THash>::
-begin() const noexcept {
-    return const_iterator(head);
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::const_iterator
-EvictingCacheMap<TKey, TValue, THash>::
-end() const noexcept {
-    return const_iterator(nullptr);
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::const_iterator
-EvictingCacheMap<TKey, TValue, THash>::
-cbegin() const noexcept {
-    return begin();
-}
-
-template<class TKey, class TValue, class THash>
-class EvictingCacheMap<TKey, TValue, THash>::const_iterator
-EvictingCacheMap<TKey, TValue, THash>::
-cend() const noexcept {
-    return end();
-}
-
-//  EvictingCacheMap::Node
-
-template<class TKey, class TValue, class THash>
-EvictingCacheMap<TKey, TValue, THash>::Node::
-Node(TKey && key, TValue && value)
-        : data(std::move(key), std::move(value)) {
-}
+#include "EvictingCacheMap.inc"
 
 #endif //LRU_EVICTINGCACHEMAP_H

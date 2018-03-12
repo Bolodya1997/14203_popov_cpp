@@ -7,7 +7,7 @@
 
 #include "Traceable.h"
 
-class EvictingCacheMapTest: public ::testing::Test {
+class EvictingCacheMapTest : public ::testing::Test {
 protected:
     EvictingCacheMapTest() = default;
 
