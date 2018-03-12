@@ -6,14 +6,24 @@ find_package(Threads REQUIRED)
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-# Download and install GoogleTest
-ExternalProject_Add(gtest
-        GIT_REPOSITORY  https://github.com/google/googletest.git
-        GIT_TAG         master
-        PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/gtest
-        # Disable install step
-        INSTALL_COMMAND ""
-)
+# Use GIT if you can, if not - use URL
+find_package(Git)
+if(GIT_FOUND)
+        ExternalProject_Add(gtest
+                GIT_REPOSITORY  https://github.com/google/googletest.git
+                GIT_TAG         master
+                PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/gtest
+                # Disable install step
+                INSTALL_COMMAND ""
+        )
+else()
+        ExternalProject_Add(gtest
+                URL             https://github.com/google/googletest/archive/master.zip
+                PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/gtest
+                # Disable install step
+                INSTALL_COMMAND ""
+        )
+endif()
 
 # Get GTest source and binary directories from CMake project
 ExternalProject_Get_Property(gtest source_dir binary_dir)
