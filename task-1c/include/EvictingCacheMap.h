@@ -7,11 +7,13 @@
 #include <vector>
 #include <list>
 #include <stdexcept>
+#include <utility>
 
 template <class TKey, class TValue, class THash = std::hash<TKey>>
 class EvictingCacheMap final {
 private:
     struct Node;
+    using NodePtr = typename std::list<Node>::iterator;
 
     template <class It, class V>
     class BaseIterator;
@@ -27,7 +29,7 @@ public:
         ~iterator() override = default;
 
     private:
-        explicit iterator(Node * node);
+        explicit iterator(const NodePtr & node);
 
         friend class EvictingCacheMap<TKey, TValue, THash>;
     };
@@ -42,7 +44,7 @@ public:
         ~const_iterator() override = default;
 
     private:
-        explicit const_iterator(Node * node);
+        explicit const_iterator(const NodePtr & node);
 
         friend class EvictingCacheMap<TKey, TValue, THash>;
     };
@@ -129,15 +131,16 @@ public:
 private:
     struct Node {
         Node() = delete;
-        explicit Node(TKey && key, TValue && value);
+        template <class T, class E>
+        explicit Node(T && key, E && value);
 
         Node(const Node & other) = delete;
-        Node(Node && other) = default;
+        Node(Node && other) noexcept = delete;
 
         std::pair<const TKey, TValue> data;
 
-        Node * prev = nullptr;
-        Node * next = nullptr;
+        NodePtr prev = NULL_NODE;
+        NodePtr next = NULL_NODE;
     };
 
     template <class It, class V>
@@ -166,25 +169,31 @@ private:
         It operator++(int);
 
     protected:
-        explicit BaseIterator(Node * node);
+        explicit BaseIterator(const NodePtr & node);
 
     private:
-        static constexpr const char *OUT_OF_RANGE = "Iterator is out of range";
+        static constexpr const char * OUT_OF_RANGE = "Iterator is out of range";
 
-        Node * node;
+        NodePtr node;
     };
 
-    std::size_t capacity;
+    static const NodePtr NULL_NODE;
 
     std::vector<std::list<Node>> hashTable;
 
-    Node * tail = nullptr;
-    Node * head = nullptr;
+    std::size_t capacity;
+    std::size_t _size = 0;
+
+    NodePtr tail = NULL_NODE;
+    NodePtr head = NULL_NODE;
 
     size_t keyToPos(const TKey & key) const noexcept;
 
-    const Node * findNode(const TKey & key) const;
-    void promoteToHead(Node * node) noexcept;
+    const NodePtr findNode(const TKey & key) const;
+    void promoteToHead(const NodePtr & node);
+
+    void removeNode(const NodePtr & node) noexcept;
+    void addNode(const NodePtr & node) noexcept;
 };
 
 #include "EvictingCacheMap.inc"

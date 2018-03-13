@@ -19,51 +19,51 @@ using std::vector;
 //  put
 
 TEST_F(EvictingCacheMapTest, Put) {
-    pair<Traceable &&, Traceable &&> kv = { createTraceable(), createTraceable() };
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
     pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
             = { kv.first.getTrace(), kv.second.getTrace() };
 
     auto map = EvictingCacheMap<Traceable, Traceable>(1);
     map.put(kv.first, kv.second);  //  +1 copy [k, v]
 
-    ASSERT_EQ(kvTraces.first.getCopyCalls(), 1);
-    ASSERT_EQ(kvTraces.second.getCopyCalls(), 1);
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 1);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 1);
 }
 
 TEST_F(EvictingCacheMapTest, PutMoveK) {
-    pair<Traceable &&, Traceable &&> kv = { createTraceable(), createTraceable() };
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
     pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
             = { kv.first.getTrace(), kv.second.getTrace() };
 
     auto map = EvictingCacheMap<Traceable, Traceable>(1);
     map.put(move(kv.first), kv.second);    //  +1 copy [v]
 
-    ASSERT_EQ(kvTraces.first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces.second.getCopyCalls(), 1);
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 1);
 }
 
 TEST_F(EvictingCacheMapTest, PutMoveV) {
-    pair<Traceable &&, Traceable &&> kv = { createTraceable(), createTraceable() };
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
     pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
             = { kv.first.getTrace(), kv.second.getTrace() };
 
     auto map = EvictingCacheMap<Traceable, Traceable>(1);
     map.put(kv.first, move(kv.second));    //  +1 copy [k]
 
-    ASSERT_EQ(kvTraces.first.getCopyCalls(), 1);
-    ASSERT_EQ(kvTraces.second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 1);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 0);
 }
 
 TEST_F(EvictingCacheMapTest, PutMoveKV) {
-    pair<Traceable &&, Traceable &&> kv = { createTraceable(), createTraceable() };
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
     pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
             = { kv.first.getTrace(), kv.second.getTrace() };
 
     auto map = EvictingCacheMap<Traceable, Traceable>(1);
     map.put(move(kv.first), move(kv.second));
 
-    ASSERT_EQ(kvTraces.first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces.second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 0);
 }
 
 TEST_F(EvictingCacheMapTest, PutGet) {
@@ -79,10 +79,19 @@ TEST_F(EvictingCacheMapTest, PutGet) {
     ASSERT_EQ(map.get(5).value(), 6);
 }
 
+TEST_F(EvictingCacheMapTest, PutReplace) {
+    auto map = EvictingCacheMap<int, int>(2);
+    map.put(1, 1);
+    map.put(1, 2);
+
+    ASSERT_EQ(map.size(), 1u);
+    ASSERT_EQ(map.get(1), 2);
+}
+
 //  copy assignment
 
 TEST_F(EvictingCacheMapTest, CopyAssignmentSelf) {
-    pair<Traceable &&, Traceable &&> kv = { createTraceable(), createTraceable() };
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
     pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
             = { kv.first.getTrace(), kv.second.getTrace() };
 
@@ -91,14 +100,14 @@ TEST_F(EvictingCacheMapTest, CopyAssignmentSelf) {
 
     map = map;
 
-    ASSERT_EQ(kvTraces.first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces.second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 0);
     ASSERT_TRUE(kvTraces.first.isAlive());
     ASSERT_TRUE(kvTraces.second.isAlive());
 }
 
 TEST_F(EvictingCacheMapTest, CopyAssignmentOther) {
-    pair<Traceable &&, Traceable &&> kv[] = {
+    pair<Traceable, Traceable> kv[] = {
             { createTraceable(), createTraceable() },
             { createTraceable(), createTraceable() }
     };
@@ -115,13 +124,13 @@ TEST_F(EvictingCacheMapTest, CopyAssignmentOther) {
 
     map0 = map1;    // +1 destructor [0][k, v], +1 copy [1][k, v]
 
-    ASSERT_EQ(kvTraces[0].first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces[0].second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces[0].first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces[0].second.getCopyCalls(), 0);
     ASSERT_FALSE(kvTraces[0].first.isAlive());
     ASSERT_FALSE(kvTraces[0].second.isAlive());
 
-    ASSERT_EQ(kvTraces[1].first.getCopyCalls(), 1);
-    ASSERT_EQ(kvTraces[1].second.getCopyCalls(), 1);
+    ASSERT_LE(kvTraces[1].first.getCopyCalls(), 1);
+    ASSERT_LE(kvTraces[1].second.getCopyCalls(), 1);
     ASSERT_TRUE(kvTraces[1].first.isAlive());
     ASSERT_TRUE(kvTraces[1].second.isAlive());
 }
@@ -146,23 +155,23 @@ TEST_F(EvictingCacheMapTest, CopyAssignmentOrder) {
 //  move assignment
 
 TEST_F(EvictingCacheMapTest, MoveAssignmentSelf) {
-    pair<Traceable &&, Traceable &&> kv = { createTraceable(), createTraceable() };
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
     pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
             = { kv.first.getTrace(), kv.second.getTrace() };
 
     auto map = EvictingCacheMap<Traceable, Traceable>(1);
     map.put(move(kv.first), move(kv.second));
 
-    map = map;
+    map = std::move(map);
 
-    ASSERT_EQ(kvTraces.first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces.second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 0);
     ASSERT_TRUE(kvTraces.first.isAlive());
     ASSERT_TRUE(kvTraces.second.isAlive());
 }
 
 TEST_F(EvictingCacheMapTest, MoveAssignmentOther) {
-    pair<Traceable &&, Traceable &&> kv[] = {
+    pair<Traceable, Traceable> kv[] = {
             { createTraceable(), createTraceable() },
             { createTraceable(), createTraceable() }
     };
@@ -177,15 +186,15 @@ TEST_F(EvictingCacheMapTest, MoveAssignmentOther) {
     auto map1 = EvictingCacheMap<Traceable, Traceable>(1);
     map1.put(move(kv[1].first), move(kv[1].second));
 
-    map0 = map1;    // +1 destructor [0][k, v]
+    map0 = std::move(map1); // +1 destructor [0][k, v]
 
-    ASSERT_EQ(kvTraces[0].first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces[0].second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces[0].first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces[0].second.getCopyCalls(), 0);
     ASSERT_FALSE(kvTraces[0].first.isAlive());
     ASSERT_FALSE(kvTraces[0].second.isAlive());
 
-    ASSERT_EQ(kvTraces[1].first.getCopyCalls(), 0);
-    ASSERT_EQ(kvTraces[1].second.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces[1].first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces[1].second.getCopyCalls(), 0);
     ASSERT_TRUE(kvTraces[1].first.isAlive());
     ASSERT_TRUE(kvTraces[1].second.isAlive());
 }
@@ -245,15 +254,20 @@ TEST_F(EvictingCacheMapTest, Find) {
 
 TEST_F(EvictingCacheMapTest, Erase) {
     auto map = EvictingCacheMap<int, int>(2);
-    map.put(1, 2);
-    map.put(3, 4);
 
+    map.put(1, 2);
     ASSERT_TRUE(map.erase(1));
+
+    map.put(3, 4);
     ASSERT_FALSE(map.erase(8));
+
+    map.put(5, 6);
+    ASSERT_TRUE(map.erase(5));
 
     ASSERT_FALSE(map.exists(1));
     ASSERT_TRUE(map.exists(3));
-    ASSERT_EQ(map.size(), 2u);
+    ASSERT_FALSE(map.exists(5));
+    ASSERT_EQ(map.size(), 1u);
 }
 
 //  empty, clear, size
@@ -311,6 +325,15 @@ TEST_F(EvictingCacheMapTest, Iterator) {
     ASSERT_TRUE(it == map.end());
 }
 
+TEST_F(EvictingCacheMapTest, IteratorOutOfRange) {
+    auto it = EvictingCacheMap<int, int>::iterator();
+
+    ASSERT_THROW(*it, std::out_of_range);
+    ASSERT_THROW(it->first, std::out_of_range);
+    ASSERT_THROW(it++, std::out_of_range);
+    ASSERT_THROW(++it, std::out_of_range);
+}
+
 //  const_iterator
 
 TEST_F(EvictingCacheMapTest, ConstIterator) {
@@ -352,4 +375,34 @@ TEST_F(EvictingCacheMapTest, ConstIterator) {
 
     ASSERT_TRUE(map.cbegin() == map.begin());
     ASSERT_TRUE(map.cend() == map.end());
+}
+
+TEST_F(EvictingCacheMapTest, ConstIteratorOutOfRange) {
+    auto it = EvictingCacheMap<int, int>::const_iterator();
+
+    ASSERT_THROW(*it, std::out_of_range);
+    ASSERT_THROW(it->first, std::out_of_range);
+    ASSERT_THROW(it++, std::out_of_range);
+    ASSERT_THROW(++it, std::out_of_range);
+}
+
+//  code coverage final
+
+TEST_F(EvictingCacheMapTest, CodeCoverage) {
+    auto map = EvictingCacheMap<int, int>(5);
+
+    map.put(0, 0);
+    map.put(1, 1);
+    map.put(2, 2);
+    map.get(2);
+    map.get(0);
+    map.get(2); //  3
+    map.get(1); //  2
+    map.get(0); //  1
+
+    auto it = map.begin();
+
+    ASSERT_EQ(0, (it++)->first);
+    ASSERT_EQ(1, (it++)->first);
+    ASSERT_EQ(2, (it++)->first);
 }
