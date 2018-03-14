@@ -230,17 +230,16 @@ private:
     }
 
     void rehash() {
-        auto newTable = std::vector<std::list<iterator>>(hashTable.size() * 2);
+        auto oldTable = std::move(hashTable);
+        hashTable = std::vector<std::list<iterator>>(oldTable.size() * 2);
 
-        for (auto & bucket : hashTable) {
-            while (!bucket.empty()) {
-                auto itB = bucket.begin();
-                auto & newBucket = newTable[THash()((*itB)->first) % newTable.size()];
-                newBucket.splice(newBucket.begin(), newBucket, itB);
+        for (auto & oldBucket : oldTable) {
+            while (!oldBucket.empty()) {
+                auto itB = oldBucket.begin();
+                auto & bucket = hashTable[keyToBucket((*itB)->first)];
+                bucket.splice(bucket.begin(), oldBucket, itB);
             }
         }
-
-        hashTable = std::move(newTable);
     }
 };
 
