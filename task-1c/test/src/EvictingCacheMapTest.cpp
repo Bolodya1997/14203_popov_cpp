@@ -406,3 +406,18 @@ TEST_F(EvictingCacheMapTest, CodeCoverage) {
     ASSERT_EQ(1, (it++)->first);
     ASSERT_EQ(2, (it++)->first);
 }
+
+TEST_F(EvictingCacheMapTest, ZeroCapacity) {
+    pair<Traceable, Traceable> kv = { createTraceable(), createTraceable() };
+    pair<const Traceable::Trace &, const Traceable::Trace &> kvTraces
+            = { kv.first.getTrace(), kv.second.getTrace() };
+
+    auto map = EvictingCacheMap<Traceable, Traceable>(0);
+    map.put(kv.first, kv.second);
+    map.put(kv.first, kv.second);
+
+    ASSERT_LE(kvTraces.first.getCopyCalls(), 0);
+    ASSERT_LE(kvTraces.second.getCopyCalls(), 0);
+    ASSERT_TRUE(kvTraces.first.isAlive());
+    ASSERT_TRUE(kvTraces.second.isAlive());
+}

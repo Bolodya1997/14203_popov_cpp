@@ -128,6 +128,9 @@ template <class T, class E>
 void
 EvictingCacheMap<TKey, TValue, THash>::
 put(T && key, E && value) {
+    if (capacity == 0)
+        return;
+
     auto node = findNode(key);
     if (node != NULL_NODE) {
         node->data.second = std::forward<E>(value);
