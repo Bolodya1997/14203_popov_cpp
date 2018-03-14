@@ -414,10 +414,12 @@ TEST_F(EvictingCacheMapTest, ZeroCapacity) {
 
     auto map = EvictingCacheMap<Traceable, Traceable>(0);
     map.put(kv.first, kv.second);
-    map.put(kv.first, kv.second);
-
     ASSERT_LE(kvTraces.first.getCopyCalls(), 0);
     ASSERT_LE(kvTraces.second.getCopyCalls(), 0);
     ASSERT_TRUE(kvTraces.first.isAlive());
     ASSERT_TRUE(kvTraces.second.isAlive());
+
+    ASSERT_FALSE(map.erase(kv.first));
+
+    ASSERT_EQ(map.find(kv.first), map.end());
 }

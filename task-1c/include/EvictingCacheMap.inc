@@ -107,6 +107,9 @@ template <class TKey, class TValue, class THash>
 bool
 EvictingCacheMap<TKey, TValue, THash>::
 erase(const TKey & key) {
+    if (capacity == 0)
+        return false;
+
     auto & list = hashTable[keyToPos(key)];
     for (auto node = list.begin(); node != list.end(); ++node) {
         if (node->data.first != key)
@@ -338,6 +341,9 @@ template <class TKey, class TValue, class THash>
 const typename EvictingCacheMap<TKey, TValue, THash>::NodePtr
 EvictingCacheMap<TKey, TValue, THash>::
 findNode(const TKey & key) const {
+    if (capacity == 0)
+        return NULL_NODE;
+
     auto & list = const_cast<std::list<Node> &>(hashTable[keyToPos(key)]);
     for (auto node = list.begin(); node != list.end(); ++node) {
         if (node->data.first == key)
