@@ -13,7 +13,9 @@ protected:
 
     ~EvictingCacheMapTest() override = default;
 
-    Traceable createTraceable();
+    Traceable createTraceable() {
+        return Traceable(traces.emplace_back());
+    }
 
 private:
     std::list<Traceable::Trace> traces;

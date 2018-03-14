@@ -6,7 +6,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${GTEST_INCLUDE})
 
 set(TEST_TARGET test_lru)
-add_executable(${TEST_TARGET} ${SRCS} ../include/EvictingCacheMap.h ../include/EvictingCacheMap.inc)
+add_executable(${TEST_TARGET} ${SRCS} ../include/EvictingCacheMap.h)
 
 target_link_libraries(test_lru
         ${GTEST_LIB})

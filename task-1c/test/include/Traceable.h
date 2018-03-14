@@ -45,8 +45,9 @@ private:
 template<>
 struct std::hash<Traceable> {
 
-    std::size_t operator()(const Traceable & traceable) {
-        return std::hash<const Traceable::Trace *>()((&traceable.getTrace()));
+    std::size_t operator()(const Traceable & traceable) const {
+        return reinterpret_cast<std::size_t>(&traceable.getTrace());
     }
 };
+
 #endif //LRU_TRACEABLE_H
