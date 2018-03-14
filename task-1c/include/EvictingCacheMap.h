@@ -19,6 +19,8 @@ private:
     class BaseIterator;
 
 public:
+    using value_type = std::pair<const TKey, TValue>;
+
     class iterator :
             public BaseIterator<iterator, std::pair<const TKey, TValue>> {
     public:
@@ -179,6 +181,8 @@ private:
 
     static const NodePtr NULL_NODE;
 
+    static constexpr const std::size_t LIST_SIZE = 10;
+
     std::vector<std::list<Node>> hashTable;
 
     std::size_t capacity;
@@ -187,7 +191,7 @@ private:
     NodePtr tail = NULL_NODE;
     NodePtr head = NULL_NODE;
 
-    size_t keyToPos(const TKey & key) const noexcept;
+    std::size_t keyToPos(const TKey & key) const noexcept;
 
     const NodePtr findNode(const TKey & key) const;
     void promoteToHead(const NodePtr & node);

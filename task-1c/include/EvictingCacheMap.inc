@@ -401,3 +401,4 @@ addNode(const NodePtr & node) noexcept {
     if (tail == NULL_NODE)  //  empty map
         tail = node;
 }
+

@@ -1,5 +1,7 @@
 #include "EvictingCacheMapTest.h"
 
+#include <gmock/gmock.h>
+
 #include <EvictingCacheMap.h>
 
 //  EvictingCacheMapTest
@@ -67,25 +69,35 @@ TEST_F(EvictingCacheMapTest, PutMoveKV) {
 }
 
 TEST_F(EvictingCacheMapTest, PutGet) {
-    auto map = EvictingCacheMap<int, int>(2);
+    auto map = EvictingCacheMap<int, int>(5);
     map.put(1, 2);
     map.put(3, 4);
+    map.put(5, 6);
+    map.put(7, 8);
+    map.put(9, 0);
 
     map.get(3);     //  put {3, 4} on the top of the queue
-    map.put(5, 6);  //  evict {1, 2}
+    map.put(0, 0);  //  evict {1, 2}
 
     ASSERT_FALSE(map.get(1).has_value());
     ASSERT_EQ(map.get(3).value(), 4);
     ASSERT_EQ(map.get(5).value(), 6);
+    ASSERT_EQ(map.get(7).value(), 8);
+    ASSERT_EQ(map.get(9).value(), 0);
+    ASSERT_EQ(map.get(0).value(), 0);
 }
 
 TEST_F(EvictingCacheMapTest, PutReplace) {
-    auto map = EvictingCacheMap<int, int>(2);
+    auto map = EvictingCacheMap<int, int>(4);
     map.put(1, 1);
+    map.put(2, 2);
+    map.put(3, 3);
     map.put(1, 2);
 
-    ASSERT_EQ(map.size(), 1u);
+    ASSERT_EQ(map.size(), 3u);
     ASSERT_EQ(map.get(1), 2);
+    ASSERT_EQ(map.get(2), 2);
+    ASSERT_EQ(map.get(3), 3);
 }
 
 //  copy assignment
@@ -144,12 +156,13 @@ TEST_F(EvictingCacheMapTest, CopyAssignmentOrder) {
     auto map1 = map0;
     ASSERT_EQ(map0.size(), map1.size());
 
-    auto it0 = map0.begin();
-    auto it1 = map1.begin();
-    for (int i = 0; i < 10; ++i, ++it0, ++it1) {
-        ASSERT_EQ(it0->first, it1->first);
-        ASSERT_EQ(it0->second, it1->second);
-    }
+    ASSERT_THAT(map0, ::testing::ElementsAreArray(map1.begin(), map1.end()));
+
+//    auto it0 = map0.begin();
+//    auto it1 = map1.begin();
+//    for (int i = 0; i < 10; ++i, ++it0, ++it1) {
+//        ASSERT_EQ(*it0, *it1);
+//    }
 }
 
 //  move assignment
@@ -205,7 +218,7 @@ TEST_F(EvictingCacheMapTest, MoveAssignmentOrder) {
         map0.put(i, i);
     }
 
-    auto vec = vector<pair<int, int>>();
+    auto vec = vector<pair<const int, int>>();
     for (auto && kv : map0) {
         vec.push_back(kv);
     }
@@ -213,11 +226,7 @@ TEST_F(EvictingCacheMapTest, MoveAssignmentOrder) {
     auto map1 = map0;
     ASSERT_EQ(map1.size(), 10u);
 
-    auto it = map1.begin();
-    for (int i = 0; i < 10; ++i, ++it) {
-        ASSERT_EQ(it->first, vec[i].first);
-        ASSERT_EQ(it->second, vec[i].second);
-    }
+    ASSERT_THAT(map1, ::testing::ElementsAreArray(vec.begin(), vec.end()));
 }
 
 //  exists
