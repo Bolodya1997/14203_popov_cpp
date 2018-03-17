@@ -1,0 +1,8 @@
+# Clion project files
+**/.idea
+
+# CMake build files
+**/build
+
+# binaries
+**/bin
