@@ -11,7 +11,12 @@
 
 struct BadType {
     using const_iterator = BadType;
+
+    using difference_type = BadType;
     using value_type = BadType;
+    using pointer = BadType;
+    using reference = BadType;
+    using iterator_category = BadType;
 };
 
 struct InfiniteStreamTag {
@@ -29,7 +34,7 @@ template <class _T = BadType,
 class Stream {
 public:
     using T = std::conditional_t<std::is_same_v<BadType, _T>,
-            typename _SAccessor::value_type, _T>;
+            typename std::iterator_traits<_SAccessor>::value_type, _T>;
     using Container = std::conditional_t<std::is_same_v<BadType, _Container>,
             std::vector<T>, _Container>;
     using SAccessor = std::conditional_t<std::is_same_v<BadType, _SAccessor>,
@@ -67,7 +72,6 @@ public:
                     std::enable_if_t<isGenerator<Generator>::value, void *> = nullptr)
             : begin(GenAccessor<Generator>(generator)),
               end(GenAccessor<Generator>(generator)) {
-        static_assert(std::is_same_v<int, T>);
     }
 
     template <class... Vs>
@@ -85,19 +89,30 @@ public:
 
     ~Stream() = default;
 
-    template <class Op>
-    auto operator|(const Op & op) {
-        return stream(op);
+    template <class Modifier>
+    auto operator>>(const Modifier & modifier)
+    -> std::enable_if_t<isModifier<Modifier, T>::value,
+                        Stream<decltype(modifier.modify(std::declval<T>())),
+                               Container,
+                               BadType,
+                               Accessor<SAccessor, Modifier>>> {
+        auto newBegin = Accessor<SAccessor, Modifier>(begin, modifier);
+        auto newEnd = Accessor<SAccessor, Modifier>(end, modifier);
+
+        return Stream<decltype(modifier.modify(std::declval<T>())),
+                      Container,
+                      BadType,
+                      Accessor<SAccessor, Modifier>>(std::move(container),
+                                                     newBegin,
+                                                     newEnd);
     }
 
-    void print() {
-        int i = 0;
-        for (auto ac = begin; ac != end; ++ac) {
-            if (i++ >= 10)
-                break;
-            std::cout << *ac << " ";
-        }
-        std::cout << std::endl;
+    template <class Terminator>
+    auto operator>>(const Terminator & terminator)
+    -> std::enable_if_t<isTerminator<Terminator, SAccessor>::value,
+                        decltype(terminator.terminate(std::declval<SAccessor>(),
+                                                      std::declval<SAccessor>()))> {
+        return terminator.terminate(begin, end);
     }
 
 private:
@@ -113,26 +128,6 @@ private:
 
     SAccessor begin;
     SAccessor end;
-
-    template <class Modifier>
-    auto stream(const Modifier & modifier,
-                std::enable_if_t<isModifier<Modifier>::value, void *> = nullptr) {
-        auto newBegin = Accessor(begin, modifier);
-        auto newEnd = Accessor(end, modifier);
-
-        return Stream<typename Modifier::Out,
-                      Container,
-                      int(int),
-                      Accessor<SAccessor, Modifier>>(std::move(container),
-                                                     newBegin,
-                                                     newEnd);
-    }
-
-    template <class Terminator>
-    auto stream(const Terminator & terminator,
-                std::enable_if_t<!isModifier<Terminator>::value, void *> = nullptr) {
-        return terminator.terminate(begin, end);
-    }
 
     template <class, class, class, class>
     friend class Stream;

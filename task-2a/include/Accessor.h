@@ -6,7 +6,13 @@
 template <class SAccessor, class Modifier>
 class Accessor {
 public:
-    using value_type = typename Modifier::Out;
+    using SuperValueType = typename std::iterator_traits<SAccessor>::value_type;
+
+    using difference_type = std::ptrdiff_t;
+    using value_type = decltype(std::declval<Modifier>().modify(std::declval<SuperValueType>()));
+    using pointer = value_type *;
+    using reference = value_type &;
+    using iterator_category = std::forward_iterator_tag;
 
     Accessor() = default;
     explicit Accessor(const SAccessor & sAccessor, const Modifier & modifier)
