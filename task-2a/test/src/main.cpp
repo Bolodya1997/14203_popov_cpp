@@ -18,11 +18,17 @@ int main(int argc, char * * argv) {
 //
 //    return RUN_ALL_TESTS();
 
-    auto vi = vector{1, 2, 3, 4, 5};
-    auto vs = vector<string>{"a", "b", "c"};
+    auto vi = vector{ 1, 2, 3, 4, 5 };
+    auto vs = vector<string>{ "a", "b", "c" };
 
     auto _int = Stream(vi.begin(), vi.end());
     auto _string = Stream([]() { return string("kek"); });
 
-    _string >> ::map([](auto x) { return x + x; }) >> ::get(10) >> print_to(cout) << endl;
+    Stream([]() { return 1; })
+            >> group(10)
+            >> group(1)
+            >> ::get(3)
+            >> ::map([](auto v) { return v[0]; })
+            >> ::map([](auto v) { return v.size(); })
+            >> print_to(cout) << endl;
 }

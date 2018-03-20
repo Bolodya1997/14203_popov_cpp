@@ -18,13 +18,13 @@ public:
               pos(_pos) {
     }
 
-    RangeAccessor(const RangeAccessor & other) = default;
-    RangeAccessor(RangeAccessor && other) noexcept = default;
+    RangeAccessor(const RangeAccessor &) = default;
+    RangeAccessor(RangeAccessor &&) noexcept = default;
 
     ~RangeAccessor() = default;
 
-    RangeAccessor & operator=(const RangeAccessor & other) = default;
-    RangeAccessor & operator=(RangeAccessor && oher) noexcept = default;
+    RangeAccessor & operator=(const RangeAccessor &) = default;
+    RangeAccessor & operator=(RangeAccessor &&) noexcept = default;
 
     bool operator==(const RangeAccessor & other) {
         return pos == other.pos || accessor == other.accessor;

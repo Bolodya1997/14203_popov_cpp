@@ -80,43 +80,58 @@ struct _isGenerator<T,
 template <class T>
 inline constexpr bool isGenerator = _isGenerator<T>::value;
 
-//  isModifier
-
-template <class T, class In, class StreamTag, class V = void>
-struct _isModifier : std::false_type {
-};
-
-template <class T, class In, class StreamTag>
-struct _isModifier<T, In, StreamTag,
-                   std::conditional_t<false,
-                                      decltype(std::declval<T>().modify(std::declval<In>(),
-                                                                        std::declval<StreamTag>())),
-                                      void>
-                   > : std::true_type {
-};
-
-template <class T, class In, class StreamTag>
-inline constexpr bool isModifier = _isModifier<T, In, StreamTag>::value;
-
 //  isRangeModifier
 
-template <class T, class Accessor, class StreamTag, class V = void>
+template <class T, class Accessor, class V = void>
 struct _isRangeModifier : std::false_type {
 };
 
-template <class T, class Accessor, class StreamTag>
-struct _isRangeModifier<T, Accessor, StreamTag,
-                        std::conditional_t<false,
-                                           decltype(std::declval<T>()
-                                                   .rangeModify(std::declval<Accessor>(),
-                                                                std::declval<Accessor>(),
-                                                                std::declval<StreamTag>())),
-                                           void>
-                        > : std::true_type {
+template <class T, class Accessor>
+struct _isRangeModifier<T, Accessor,
+        std::conditional_t<false,
+                decltype(std::declval<T>().rangeModify(std::declval<Accessor>(),
+                                                       std::declval<Accessor>())),
+                void>
+> : std::true_type {
 };
 
-template <class T, class Accessor, class StreamTag>
-inline constexpr bool isRangeModifier = _isRangeModifier<T, Accessor, StreamTag>::value;
+template <class T, class Accessor>
+inline constexpr bool isRangeModifier = _isRangeModifier<T, Accessor>::value;
+
+//  isMapModifier
+
+template <class T, class In, class V = void>
+struct _isMapModifier : std::false_type {
+};
+
+template <class T, class In>
+struct _isMapModifier<T, In,
+                      std::conditional_t<false,
+                                         decltype(std::declval<T>().mapModify(std::declval<In>())),
+                                         void>
+                      > : std::true_type {
+};
+
+template <class T, class In>
+inline constexpr bool isMapModifier = _isMapModifier<T, In>::value;
+
+//  isGroupModifier
+
+template <class T, class Accessor, class V = void>
+struct _isGroupModifier : std::false_type {
+};
+
+template <class T, class Accessor>
+struct _isGroupModifier<T, Accessor,
+        std::conditional_t<false,
+                           decltype(std::declval<T>().groupModify(std::declval<Accessor>(),
+                                                                  std::declval<Accessor>())),
+                           void>
+> : std::true_type {
+};
+
+template <class T, class Accessor>
+inline constexpr bool isGroupModifier = _isGroupModifier<T, Accessor>::value;
 
 //  isTerminator
 

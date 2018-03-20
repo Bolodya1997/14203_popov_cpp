@@ -5,24 +5,16 @@
 
 class get {
 public:
-    using ResultTag = FiniteStreamTag;
+    using StreamTag = FiniteStreamTag;
 
+    get() = delete;
     explicit get(const std::size_t & _n)
             : n(_n) {
     }
 
-    template <class Accessor, class StreamTag>
-    auto rangeModify(Accessor begin, Accessor end, StreamTag) const {
-        auto newBegin = RangeAccessor(begin, 0);
-        auto newEnd = newBegin;
-
-        for (std::size_t i = 0; i < n && begin != end; ++i, ++begin) {
-            ++newEnd;
-        }
-
-        if (begin == end)
-            return std::pair{ newBegin, RangeAccessor(end, n) };
-        return std::pair{ newBegin, newEnd };
+    template <class Accessor>
+    auto rangeModify(Accessor begin, Accessor end) const {
+        return std::pair{ RangeAccessor(begin, 0), RangeAccessor(end, n) };
     }
 
 private:
@@ -32,14 +24,15 @@ private:
 template <class F>
 class map {
 public:
-    using ResultTag = InfiniteStreamTag;
+    using StreamTag = InfiniteStreamTag;
 
+    map() = delete;
     explicit map(const F & _f)
             : f(_f) {
     }
 
-    template <class In, class StreamTag>
-    auto modify(const In & value, StreamTag) const {
+    template <class In>
+    auto mapModify(const In & value) const {
         return f(value);
     }
 
@@ -53,7 +46,22 @@ class filter {  //  TODO: filter
 class skip {    //  TODO: skip
 };
 
-class group {   //  TODO: group
+class group {
+public:
+    using StreamTag = InfiniteStreamTag;
+
+    group() = delete;
+    explicit group(const std::size_t & _n)
+            : n(_n) {
+    }
+
+    template <class Accessor>
+    auto groupModify(Accessor begin, Accessor end) const {
+        return std::pair{ GroupAccessor(begin, end, n), GroupAccessor(end, end, n) };
+    }
+
+private:
+    std::size_t n;
 };
 
 #endif //STREAM_MODIFIERS_H

@@ -17,13 +17,13 @@ public:
             : generator(generator) {
     }
 
-    GenAccessor(const GenAccessor & other) = default;
-    GenAccessor(GenAccessor && other) noexcept = default;
+    GenAccessor(const GenAccessor &) = default;
+    GenAccessor(GenAccessor &&) noexcept = default;
 
     ~GenAccessor() = default;
 
-    GenAccessor & operator=(const GenAccessor & other) = delete;
-    GenAccessor & operator=(GenAccessor && oher) noexcept = delete;
+    GenAccessor & operator=(const GenAccessor &) = delete;
+    GenAccessor & operator=(GenAccessor &&) noexcept = delete;
 
     bool operator==(const GenAccessor & other) {
         return false;
@@ -34,15 +34,25 @@ public:
     }
 
     value_type operator*() const {
+        if (!invoked)
+            const_cast<GenAccessor *>(this)->invoked = true;
+
         return generator();
     }
 
     GenAccessor & operator++() {
+        if (!invoked) {
+            generator();
+            invoked = false;
+        }
+
         return *this;
     }
 
 private:
     const Generator & generator;
+
+    bool invoked = false;
 };
 
 #endif //STREAM_GENACCESSOR_H

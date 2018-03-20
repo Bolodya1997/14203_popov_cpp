@@ -118,7 +118,7 @@ public:
 
     template <class Accessor, class StreamTag>
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
-        for (std::size_t i = n; i > 0; --i) {
+        for (std::size_t i = 0; i < n; ++i) {
             if (++begin == end)
                 throw std::out_of_range("n is out of range");
         }
