@@ -18,14 +18,11 @@ int main(int argc, char * * argv) {
 //
 //    return RUN_ALL_TESTS();
 
-    int array[] = {1, 2, 3, 4, 5};
-    int * start = array;
+    auto vi = vector{1, 2, 3, 4, 5};
+    auto vs = vector<string>{"a", "b", "c"};
 
-    auto _int = Stream(start, start + 5);
+    auto _int = Stream(vi.begin(), vi.end());
     auto _string = Stream([]() { return string("kek"); });
 
-    _int >> print_to(cout);
-
-    auto a = Stream(1, 2, 3) >> sum();
-    cout << a;
+    _string >> ::map([](auto x) { return x + x; }) >> ::get(10) >> print_to(cout) << endl;
 }

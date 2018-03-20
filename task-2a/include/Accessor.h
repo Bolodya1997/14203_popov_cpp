@@ -3,18 +3,19 @@
 
 #include <utility>
 
-template <class SAccessor, class Modifier>
+template <class SAccessor, class Modifier, class StreamTag>
 class Accessor {
 public:
     using SuperValueType = typename std::iterator_traits<SAccessor>::value_type;
 
     using difference_type = std::ptrdiff_t;
-    using value_type = decltype(std::declval<Modifier>().modify(std::declval<SuperValueType>()));
+    using value_type = decltype(std::declval<Modifier>().modify(std::declval<SuperValueType>(),
+                                                                std::declval<StreamTag>()));
     using pointer = value_type *;
     using reference = value_type &;
     using iterator_category = std::forward_iterator_tag;
 
-    Accessor() = default;
+    Accessor() = delete;
     explicit Accessor(const SAccessor & sAccessor, const Modifier & modifier)
             : sAccessor(sAccessor),
               modifier(modifier) {
@@ -37,7 +38,7 @@ public:
     }
 
     value_type operator*() const {
-        return modifier.modify(*sAccessor);
+        return modifier.modify(*sAccessor, StreamTag());
     }
 
     Accessor & operator++() {

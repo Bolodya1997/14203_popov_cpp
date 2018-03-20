@@ -3,14 +3,69 @@
 
 #include <iostream>
 
-class reduce {  //  TODO: reduce
+template <class IdentityFn, class Accumulator>
+class reduce {
+public:
+    reduce(const IdentityFn & _identity, const Accumulator & _accum)
+            : identity(_identity),
+              accum(_accum) {
+    }
+
+    template <class SAccessor, class StreamTag>
+    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+        static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
+
+        auto result = identity(*begin);
+
+        ++begin;
+        for (auto it = begin; it != end; ++it) {
+            result = accum(result, *it);
+        }
+
+        return result;
+    }
+
+private:
+    const IdentityFn & identity;
+    const Accumulator & accum;
 };
+
+template <class Accumulator>
+class reduce<int, Accumulator> {
+public:
+    explicit reduce(const Accumulator & _accum)
+            : accum(_accum) {
+    }
+
+    template <class SAccessor, class StreamTag>
+    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+        static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
+
+        auto result = *begin;
+
+        ++begin;
+        for (auto it = begin; it != end; ++it) {
+            result = accum(result, *it);
+        }
+
+        return result;
+    }
+
+private:
+    const Accumulator & accum;
+};
+
+template <class Accumulator>
+explicit reduce(Accumulator) -> reduce<int, Accumulator>;
 
 class sum {
 public:
-    template <class SAccessor>
-    auto terminate(SAccessor begin, SAccessor end) const
-    -> typename std::iterator_traits<SAccessor>::value_type {
+    sum() = default;
+
+    template <class SAccessor, class StreamTag>
+    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+        static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
+
         auto res = *begin;
         while (++begin != end) {
             res += *begin;
@@ -27,8 +82,10 @@ public:
               delimiter(_delimiter){
     }
 
-    template <class SAccessor>
-    std::ostream & terminate(SAccessor begin, SAccessor end) const {
+    template <class SAccessor, class StreamTag>
+    std::ostream & terminate(SAccessor begin, SAccessor end, StreamTag) const {
+        static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
+
         for (auto ac = begin; ac != end; ++ac) {
             os << *ac << delimiter;
         }
@@ -38,13 +95,39 @@ public:
 
 private:
     std::ostream & os;
-    const char * delimiter;
+    const char *const delimiter;
 };
 
-class to_vector {   //  TODO: to_vector
+class to_vector {
+public:
+    to_vector() = default;
+
+    template <class SAccessor, class StreamTag>
+    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+        static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
+
+        return std::vector<typename std::iterator_traits<SAccessor>::value_type>(begin, end);
+    }
 };
 
-class nth {         //  TODO: nth
+class nth {
+public:
+    nth(size_t _n)
+            : n(_n) {
+    }
+
+    template <class SAccessor, class StreamTag>
+    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+        for (std::size_t i = n; i > 0; --i) {
+            if (++begin == end)
+                throw std::out_of_range("n is out of range");
+        }
+
+        return *begin;
+    }
+
+private:
+    const std::size_t n;
 };
 
 #endif //STREAM_TERMINATORS_H

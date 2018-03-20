@@ -6,13 +6,13 @@ cd build
 make install
 
 		*** RUN TESTS ***
-bin/test_lru
+bin/test_stream
 
 		*** MAKE COVERAGE ***
 cmake -DCMAKE_BUILD_TYPE=Coverage . -Bbuild
 cd build
 make
-make LRU_coverage
+make Stream_coverage
 
 		*** WATCH COVERAGE ***
 open build/LRU_coverage/index.html in your browser
