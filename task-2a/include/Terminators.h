@@ -11,8 +11,8 @@ public:
               accum(_accum) {
     }
 
-    template <class SAccessor, class StreamTag>
-    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
         auto result = identity(*begin);
@@ -37,8 +37,8 @@ public:
             : accum(_accum) {
     }
 
-    template <class SAccessor, class StreamTag>
-    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
         auto result = *begin;
@@ -62,8 +62,8 @@ class sum {
 public:
     sum() = default;
 
-    template <class SAccessor, class StreamTag>
-    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
         auto res = *begin;
@@ -82,8 +82,8 @@ public:
               delimiter(_delimiter){
     }
 
-    template <class SAccessor, class StreamTag>
-    std::ostream & terminate(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    std::ostream & terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
         for (auto ac = begin; ac != end; ++ac) {
@@ -102,11 +102,11 @@ class to_vector {
 public:
     to_vector() = default;
 
-    template <class SAccessor, class StreamTag>
-    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        return std::vector<typename std::iterator_traits<SAccessor>::value_type>(begin, end);
+        return std::vector<typename std::iterator_traits<Accessor>::value_type>(begin, end);
     }
 };
 
@@ -116,8 +116,8 @@ public:
             : n(_n) {
     }
 
-    template <class SAccessor, class StreamTag>
-    auto terminate(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    auto terminate(Accessor begin, Accessor end, StreamTag) const {
         for (std::size_t i = n; i > 0; --i) {
             if (++begin == end)
                 throw std::out_of_range("n is out of range");

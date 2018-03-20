@@ -36,7 +36,7 @@ struct _isContainer<T,
                                               decltype(std::declval<T>().begin()),
                                               decltype(std::declval<T>().end())>,
                                        void>
-                   > : std::true_type {
+                    > : std::true_type {
 };
 
 template <class T>
@@ -57,7 +57,7 @@ struct _isAccessor<T,
                                              decltype(*(std::declval<T>()))>,
 //                                           decltype(++(std::declval<T>()))>,
                                       void>
-                  > : std::true_type {
+                   > : std::true_type {
 };
 
 template <class T>
@@ -100,42 +100,42 @@ inline constexpr bool isModifier = _isModifier<T, In, StreamTag>::value;
 
 //  isRangeModifier
 
-template <class T, class SAccessor, class StreamTag, class V = void>
+template <class T, class Accessor, class StreamTag, class V = void>
 struct _isRangeModifier : std::false_type {
 };
 
-template <class T, class SAccessor, class StreamTag>
-struct _isRangeModifier<T, SAccessor, StreamTag,
+template <class T, class Accessor, class StreamTag>
+struct _isRangeModifier<T, Accessor, StreamTag,
                         std::conditional_t<false,
                                            decltype(std::declval<T>()
-                                                   .rangeModify(std::declval<SAccessor>(),
-                                                                std::declval<SAccessor>(),
+                                                   .rangeModify(std::declval<Accessor>(),
+                                                                std::declval<Accessor>(),
                                                                 std::declval<StreamTag>())),
                                            void>
-> : std::true_type {
+                        > : std::true_type {
 };
 
-template <class T, class SAccessor, class StreamTag>
-inline constexpr bool isRangeModifier = _isRangeModifier<T, SAccessor, StreamTag>::value;
+template <class T, class Accessor, class StreamTag>
+inline constexpr bool isRangeModifier = _isRangeModifier<T, Accessor, StreamTag>::value;
 
 //  isTerminator
 
-template <class T, class SAccessor, class StreamTag, class V = void>
+template <class T, class Accessor, class StreamTag, class V = void>
 struct _isTerminator : std::false_type {
 };
 
-template <class T, class SAccessor, class StreamTag>
-struct _isTerminator<T, SAccessor, StreamTag,
+template <class T, class Accessor, class StreamTag>
+struct _isTerminator<T, Accessor, StreamTag,
                      std::conditional_t<false,
                                         decltype(std::declval<T>()
-                                                .terminate(std::declval<SAccessor>(),
-                                                           std::declval<SAccessor>(),
+                                                .terminate(std::declval<Accessor>(),
+                                                           std::declval<Accessor>(),
                                                            std::declval<StreamTag>)),
                                         void>
                      > : std::true_type {
 };
 
-template <class T, class SAccessor, class StreamTag>
-inline constexpr bool isTerminator = _isTerminator<T, SAccessor, StreamTag>::value;
+template <class T, class Accessor, class StreamTag>
+inline constexpr bool isTerminator = _isTerminator<T, Accessor, StreamTag>::value;
 
 #endif //STREAM_TYPETRAITS_H

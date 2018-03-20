@@ -11,8 +11,8 @@ public:
             : n(_n) {
     }
 
-    template <class SAccessor, class StreamTag>  //  FIXME: :(
-    auto rangeModify(SAccessor begin, SAccessor end, StreamTag) const {
+    template <class Accessor, class StreamTag>
+    auto rangeModify(Accessor begin, Accessor end, StreamTag) const {
         auto newBegin = RangeAccessor(begin, 0);
         auto newEnd = newBegin;
 

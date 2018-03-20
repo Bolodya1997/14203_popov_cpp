@@ -6,33 +6,33 @@
 #include <tuple>
 
 #include "TypeTraits.h"
-#include "Accessor.h"
+#include "ModifierAccessor.h"
 #include "GenAccessor.h"
 #include "RangeAccessor.h"
 
 template <class _T = BadType,
           class _Container = BadType,
           class Generator = BadType,
-          class _SAccessor = std::conditional_t<std::is_same_v<BadType, Generator>,
-                                                typename _Container::const_iterator,
-                                                GenAccessor<Generator>>,
+          class _Accessor = std::conditional_t<std::is_same_v<BadType, Generator>,
+                                               typename _Container::const_iterator,
+                                               GenAccessor<Generator>>,
           class StreamTag = std::conditional_t<std::is_same_v<BadType, Generator>,
                                                FiniteStreamTag,
                                                InfiniteStreamTag>>
 class Stream {
     using T = std::conditional_t<std::is_same_v<BadType, _T>,
-                                 typename std::iterator_traits<_SAccessor>::value_type,
+                                 typename std::iterator_traits<_Accessor>::value_type,
                                  _T>;
     using Container = std::conditional_t<std::is_same_v<BadType, _Container>,
                                          std::vector<T>,
                                          _Container>;
-    using SAccessor = std::conditional_t<std::is_same_v<BadType, _SAccessor>,
-                                         typename Container::const_iterator,
-                                         _SAccessor>;
+    using Accessor = std::conditional_t<std::is_same_v<BadType, _Accessor>,
+                                        typename Container::const_iterator,
+                                        _Accessor>;
 
 public:
-    Stream(_SAccessor _begin, _SAccessor _end,
-           std::enable_if_t<isAccessor<_SAccessor>, void *> = nullptr)
+    Stream(_Accessor _begin, _Accessor _end,
+           std::enable_if_t<isAccessor<_Accessor>, void *> = nullptr)
             : begin(_begin),
               end(_end) {
     }
@@ -89,19 +89,19 @@ public:
                                                         std::declval<StreamTag>())),
                                Container,
                                BadType,
-                               Accessor<SAccessor, Modifier, StreamTag>,
+                               ModifierAccessor<Accessor, Modifier, StreamTag>,
                                std::conditional_t<std::is_same_v<FiniteStreamTag,
                                                                  typename Modifier::ResultTag>,
                                                   FiniteStreamTag,
                                                   StreamTag>>> {
-        auto newBegin = Accessor<SAccessor, Modifier, StreamTag>(begin, modifier);
-        auto newEnd = Accessor<SAccessor, Modifier, StreamTag>(end, modifier);
+        auto newBegin = ModifierAccessor<Accessor, Modifier, StreamTag>(begin, modifier);
+        auto newEnd = ModifierAccessor<Accessor, Modifier, StreamTag>(end, modifier);
 
         return Stream<decltype(modifier.modify(std::declval<T>(),
                                                std::declval<StreamTag>())),
                       Container,
                       BadType,
-                      Accessor<SAccessor, Modifier, StreamTag>,
+                      ModifierAccessor<Accessor, Modifier, StreamTag>,
                       std::conditional_t<std::is_same_v<FiniteStreamTag,
                                                         typename Modifier::ResultTag>,
                                          FiniteStreamTag,
@@ -112,11 +112,11 @@ public:
 
     template <class RangeModifier>
     auto operator>>(const RangeModifier & modifier)
-    -> std::enable_if_t<isRangeModifier<RangeModifier, SAccessor, StreamTag>,
+    -> std::enable_if_t<isRangeModifier<RangeModifier, Accessor, StreamTag>,
                         Stream<T,
                                Container,
                                BadType,
-                               RangeAccessor<SAccessor>,
+                               RangeAccessor<Accessor>,
                                std::conditional_t<std::is_same_v<FiniteStreamTag,
                                                                  typename RangeModifier::ResultTag>,
                                                   FiniteStreamTag,
@@ -126,7 +126,7 @@ public:
         return Stream<T,
                       Container,
                       BadType,
-                      RangeAccessor<SAccessor>,
+                      RangeAccessor<Accessor>,
                       std::conditional_t<std::is_same_v<FiniteStreamTag,
                                                         typename RangeModifier::ResultTag>,
                                          FiniteStreamTag,
@@ -137,17 +137,17 @@ public:
 
     template <class Terminator>
     auto operator>>(const Terminator & terminator)
-    -> std::enable_if_t<isTerminator<Terminator, SAccessor, StreamTag>,
-                        decltype(terminator.terminate(std::declval<SAccessor>(),
-                                                      std::declval<SAccessor>(),
+    -> std::enable_if_t<isTerminator<Terminator, Accessor, StreamTag>,
+                        decltype(terminator.terminate(std::declval<Accessor>(),
+                                                      std::declval<Accessor>(),
                                                       std::declval<StreamTag>()))> {
         return terminator.terminate(begin, end, StreamTag());
     }
 
 private:
-    Stream(Container && container, SAccessor begin, SAccessor end,
+    Stream(Container && container, Accessor begin, Accessor end,
            std::enable_if_t<isContainer<Container>, void *> = nullptr,
-           std::enable_if_t<isAccessor<SAccessor>, void *> = nullptr)
+           std::enable_if_t<isAccessor<Accessor>, void *> = nullptr)
             : container(std::move(container)),
               begin(begin),
               end(end) {
@@ -155,8 +155,8 @@ private:
 
     Container container;
 
-    SAccessor begin;
-    SAccessor end;
+    Accessor begin;
+    Accessor end;
 
     template <class, class, class, class, class>
     friend class Stream;
