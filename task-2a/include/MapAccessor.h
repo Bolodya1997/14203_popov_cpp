@@ -49,7 +49,7 @@ public:
 private:
     Accessor accessor;
 
-    const Transform transform;
+    const Transform & transform;
 };
 
 #endif //STREAM_ACCESSOR_H

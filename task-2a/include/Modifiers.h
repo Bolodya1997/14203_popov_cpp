@@ -13,6 +13,7 @@ public:
     using StreamTag = FiniteStreamTag;
 
     get() = delete;
+
     explicit get(const std::size_t & _n)
             : n(_n) {
     }
@@ -33,8 +34,13 @@ public:
     using StreamTag = InfiniteStreamTag;
 
     map() = delete;
+
     explicit map(const Transform & _transform)
             : transform(_transform) {
+    }
+
+    explicit map(Transform && _transform)
+            : transform(std::move(_transform)) {
     }
 
     template <class Accessor>
@@ -53,7 +59,12 @@ public:
     using StreamTag = InfiniteStreamTag;
 
     filter() = delete;
+
     explicit filter(const Predicate & _predicate)
+            : predicate(_predicate) {
+    }
+
+    explicit filter(Predicate && _predicate)
             : predicate(_predicate) {
     }
 

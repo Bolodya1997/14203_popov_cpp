@@ -63,7 +63,7 @@ private:
     Accessor accessor;
     Accessor end;
 
-    const Predicate predicate;
+    const Predicate & predicate;
 
     bool hasValue = false;
     value_type value;

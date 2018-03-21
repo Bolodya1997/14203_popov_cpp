@@ -49,7 +49,7 @@ public:
     }
 
 private:
-    const Generator generator;
+    const Generator & generator;
 
     std::size_t toInvoke = 1;
 };

@@ -17,7 +17,8 @@ template <class _T = BadType,
                                                GenAccessor<Generator>>,
           class StreamTag = std::conditional_t<std::is_same_v<BadType, Generator>,
                                                FiniteStreamTag,
-                                               InfiniteStreamTag>>
+                                               InfiniteStreamTag>,
+          class... Modifiers>
 class Stream {
     using T = std::conditional_t<std::is_same_v<BadType, _T>,
                                  typename std::iterator_traits<_Accessor>::value_type,
@@ -55,9 +56,16 @@ public:
               end(container.end()) {
     }
 
-    explicit Stream(const Generator & generator,
+    explicit Stream(const Generator & _generator,
                     std::enable_if_t<isGenerator<Generator>, void *> = nullptr)
-            : begin(GenAccessor<Generator>(generator)),
+            : begin(GenAccessor<Generator>(_generator)),
+              end(GenAccessor<Generator>(_generator)) {
+    }
+
+    explicit Stream(Generator && _generator,
+                    std::enable_if_t<isGenerator<Generator>, void *> = nullptr)
+            : generator(std::move(_generator)),
+              begin(GenAccessor<Generator>(generator)),
               end(GenAccessor<Generator>(generator)) {
     }
 
@@ -82,30 +90,36 @@ public:
     ~Stream() = default;
 
     template <class Modifier>
-    auto operator>>(const Modifier & modifier)
+    auto operator>>(Modifier && _modifier)
     -> std::enable_if_t<isModifier<Modifier, Accessor>,
                         Stream<BadType,
                                Container,
-                               BadType,
+                               Generator,
                                decltype(std::declval<Modifier>().modify(std::declval<Accessor>(),
                                                                         std::declval<Accessor>()).first),
                                std::conditional_t<std::is_same_v<FiniteStreamTag,
                                                                  typename Modifier::StreamTag>,
                                                   FiniteStreamTag,
-                                                  StreamTag>>> {
-        auto newRange = modifier.modify(begin, end);
+                                                  StreamTag>,
+                               std::tuple<Modifiers...>, std::unique_ptr<Modifier>>> {
+        auto modifier = std::make_unique<Modifier>(std::forward<Modifier>(_modifier));
+        auto newRange = modifier->modify(begin, end);
 
         return Stream<BadType,
                       Container,
-                      BadType,
+                      Generator,
                       decltype(std::declval<Modifier>().modify(std::declval<Accessor>(),
                                                                std::declval<Accessor>()).first),
                       std::conditional_t<std::is_same_v<FiniteStreamTag,
                                                         typename Modifier::StreamTag>,
                                          FiniteStreamTag,
-                                         StreamTag>>(std::move(container),
-                                                     newRange.first,
-                                                     newRange.second);
+                                         StreamTag>,
+                      std::tuple<Modifiers...>, std::unique_ptr<Modifier>>(std::move(container),
+                                                                           std::move(generator),
+                                                                           newRange.first,
+                                                                           newRange.second,
+                                                                           std::move(modifiers),
+                                                                           std::move(modifier));
     }
 
     template <class Terminator>
@@ -118,20 +132,28 @@ public:
     }
 
 private:
-    Stream(Container && container, Accessor begin, Accessor end,
+    Stream(Container && _container, Generator && _generator,
+           Accessor _begin, Accessor _end,
+           Modifiers &&... _modifiers,
            std::enable_if_t<isContainer<Container>, void *> = nullptr,
+           std::enable_if_t<isGenerator<Generator>, void *> = nullptr,
            std::enable_if_t<isAccessor<Accessor>, void *> = nullptr)
-            : container(std::move(container)),
-              begin(begin),
-              end(end) {
+            : container(std::move(_container)),
+              generator(std::move(_generator)),
+              begin(_begin),
+              end(_end),
+              modifiers(std::move(_modifiers)...) {
     }
 
     Container container;
+    Generator generator;
 
     Accessor begin;
     Accessor end;
 
-    template <class, class, class, class, class>
+    std::tuple<Modifiers...> modifiers;
+
+    template <class, class, class, class, class, class...>
     friend class Stream;
 };
 
