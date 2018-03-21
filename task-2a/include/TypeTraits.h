@@ -95,7 +95,7 @@ struct _isTerminator<T, Accessor, StreamTag,
                                         decltype(std::declval<T>()
                                                 .terminate(std::declval<Accessor>(),
                                                            std::declval<Accessor>(),
-                                                           std::declval<StreamTag>)),
+                                                           std::declval<StreamTag>())),
                                         void>
                      > : std::true_type {
 };

@@ -2,8 +2,8 @@
 #define STREAM_STREAM_H
 
 #include <vector>
-#include <iostream>
 #include <tuple>
+#include <memory>
 
 #include "Utils.h"
 #include "TypeTraits.h"
@@ -74,10 +74,10 @@ public:
             : Stream{ value, std::forward<Vs>(values)... } {
     }
 
-//    template <class... Vs>
-//    explicit Stream(_T && value, Vs &&... values)
-//            : Stream{ std::move(value), std::forward<Vs>(values)... } {
-//    }
+    template <class... Vs>
+    explicit Stream(_T && value, Vs &&... values)
+            : Stream{ std::move(value), std::forward<Vs>(values)... } {
+    }
 
     Stream(const Stream &) = delete;
 

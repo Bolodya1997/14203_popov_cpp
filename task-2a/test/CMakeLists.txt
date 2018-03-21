@@ -9,8 +9,8 @@ include_directories(${GTEST_INCLUDE})
 set(TEST_TARGET test_stream)
 add_executable(${TEST_TARGET} ${SRCS})
 
-target_link_libraries(${TEST_TARGET})
-#        ${GTEST_LIB})
+target_link_libraries(${TEST_TARGET}
+        ${GTEST_LIB})
 
 install(TARGETS		${TEST_TARGET}
         DESTINATION	.)
