@@ -24,11 +24,11 @@ int main(int argc, char * * argv) {
     auto _int = Stream(vi.begin(), vi.end());
     auto _string = Stream([]() { return string("kek"); });
 
-    Stream([]() { return 1; })
-            >> group(10)
-            >> group(1)
-            >> ::get(3)
-            >> ::map([](auto v) { return v[0]; })
-            >> ::map([](auto v) { return v.size(); })
+    int a = 0;
+    Stream([&a]() { return a++; })
+            >> filter([](auto x) { return x % 2 == 0; })
+            >> ::get(5)
+            >> filter([](auto x) { return x > 5; })
+            >> skip(1)
             >> print_to(cout) << endl;
 }

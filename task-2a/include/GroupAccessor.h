@@ -15,7 +15,8 @@ public:
     using iterator_category = std::forward_iterator_tag;
 
     GroupAccessor() = delete;
-    explicit GroupAccessor(const Accessor & _accessor, const Accessor & _end, std::size_t _n)
+    GroupAccessor(const Accessor & _accessor, const Accessor & _end,
+                  std::size_t _n)
             : accessor(_accessor),
               end(_end),
               n(_n) {
@@ -26,8 +27,8 @@ public:
 
     ~GroupAccessor() = default;
 
-    GroupAccessor & operator=(const GroupAccessor &) = default;
-    GroupAccessor & operator=(GroupAccessor &&) noexcept = default;
+    GroupAccessor & operator=(const GroupAccessor &) = delete;
+    GroupAccessor & operator=(GroupAccessor &&) noexcept = delete;
 
     bool operator==(const GroupAccessor & other) {
         return accessor == other.accessor;
@@ -37,7 +38,7 @@ public:
         return accessor != other.accessor;
     }
 
-    value_type operator*() const {
+    value_type operator*() {
         auto res = std::vector<SuperValueType>();
 
         auto it = accessor;
@@ -58,9 +59,9 @@ public:
 
 private:
     Accessor accessor;
-    Accessor end;
+    const Accessor end;
 
-    std::size_t n;
+    const std::size_t n;
 };
 
 #endif //STREAM_GROUPACCESSOR_H

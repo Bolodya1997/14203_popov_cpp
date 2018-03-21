@@ -5,11 +5,9 @@
 #include <iostream>
 #include <tuple>
 
+#include "Utils.h"
 #include "TypeTraits.h"
-#include "MapAccessor.h"
 #include "GenAccessor.h"
-#include "RangeAccessor.h"
-#include "GroupAccessor.h"
 
 template <class _T = BadType,
           class _Container = BadType,
@@ -83,76 +81,27 @@ public:
 
     ~Stream() = default;
 
-    template <class RangeModifier>
-    auto operator>>(const RangeModifier & modifier)
-    -> std::enable_if_t<isRangeModifier<RangeModifier, Accessor>,
-                        Stream<T,
+    template <class Modifier>
+    auto operator>>(const Modifier & modifier)
+    -> std::enable_if_t<isModifier<Modifier, Accessor>,
+                        Stream<BadType,
                                Container,
                                BadType,
-                               RangeAccessor<Accessor>,
+                               decltype(std::declval<Modifier>().modify(std::declval<Accessor>(),
+                                                                        std::declval<Accessor>()).first),
                                std::conditional_t<std::is_same_v<FiniteStreamTag,
-                                                                 typename RangeModifier::StreamTag>,
+                                                                 typename Modifier::StreamTag>,
                                                   FiniteStreamTag,
                                                   StreamTag>>> {
-        auto newRange = modifier.rangeModify(begin, end);
+        auto newRange = modifier.modify(begin, end);
 
-        return Stream<T,
+        return Stream<BadType,
                       Container,
                       BadType,
-                      RangeAccessor<Accessor>,
+                      decltype(std::declval<Modifier>().modify(std::declval<Accessor>(),
+                                                               std::declval<Accessor>()).first),
                       std::conditional_t<std::is_same_v<FiniteStreamTag,
-                                                        typename RangeModifier::StreamTag>,
-                                         FiniteStreamTag,
-                                         StreamTag>>(std::move(container),
-                                                     newRange.first,
-                                                     newRange.second);
-    }
-
-    template <class MapModifier>
-    auto operator>>(const MapModifier & modifier)
-    -> std::enable_if_t<isMapModifier<MapModifier, T>,
-                        Stream<decltype(modifier.mapModify(std::declval<T>())),
-                               Container,
-                               BadType,
-                               MapAccessor<Accessor, MapModifier>,
-                               std::conditional_t<std::is_same_v<FiniteStreamTag,
-                                                                 typename MapModifier::StreamTag>,
-                                                  FiniteStreamTag,
-                                                  StreamTag>>> {
-        auto newBegin = MapAccessor<Accessor, MapModifier>(begin, modifier);
-        auto newEnd = MapAccessor<Accessor, MapModifier>(end, modifier);
-
-        return Stream<decltype(modifier.mapModify(std::declval<T>())),
-                      Container,
-                      BadType,
-                      MapAccessor<Accessor, MapModifier>,
-                      std::conditional_t<std::is_same_v<FiniteStreamTag,
-                                                        typename MapModifier::StreamTag>,
-                                         FiniteStreamTag,
-                                         StreamTag>>(std::move(container),
-                                                     newBegin,
-                                                     newEnd);
-    }
-
-    template <class GroupModifier>
-    auto operator>>(const GroupModifier & modifier)
-    -> std::enable_if_t<isGroupModifier<GroupModifier, Accessor>,
-                        Stream<typename std::iterator_traits<GroupAccessor<Accessor>>::value_type,
-                               Container,
-                               BadType,
-                               GroupAccessor<Accessor>,
-                               std::conditional_t<std::is_same_v<FiniteStreamTag,
-                                                                 typename GroupModifier::StreamTag>,
-                                                  FiniteStreamTag,
-                                                  StreamTag>>> {
-        auto newRange = modifier.groupModify(begin, end);
-
-        return Stream<typename std::iterator_traits<GroupAccessor<Accessor>>::value_type,
-                      Container,
-                      BadType,
-                      GroupAccessor<Accessor>,
-                      std::conditional_t<std::is_same_v<FiniteStreamTag,
-                                                        typename GroupModifier::StreamTag>,
+                                                        typename Modifier::StreamTag>,
                                          FiniteStreamTag,
                                          StreamTag>>(std::move(container),
                                                      newRange.first,

@@ -1,7 +1,7 @@
 #ifndef STREAM_GENACCESSOR_H
 #define STREAM_GENACCESSOR_H
 
-#include <utility>
+#include <iterator>
 
 template <class Generator>
 class GenAccessor {
@@ -22,7 +22,7 @@ public:
 
     ~GenAccessor() = default;
 
-    GenAccessor & operator=(const GenAccessor &) = delete;
+    GenAccessor & operator=(const GenAccessor &) = default;
     GenAccessor & operator=(GenAccessor &&) noexcept = delete;
 
     bool operator==(const GenAccessor & other) {
@@ -33,26 +33,25 @@ public:
         return true;
     }
 
-    value_type operator*() const {
-        if (!invoked)
-            const_cast<GenAccessor *>(this)->invoked = true;
+    value_type operator*() {
+        for (; toInvoke > 1; --toInvoke) {
+            generator();
+        }
+        toInvoke = 0;
 
         return generator();
     }
 
     GenAccessor & operator++() {
-        if (!invoked) {
-            generator();
-            invoked = false;
-        }
+        ++toInvoke;
 
         return *this;
     }
 
 private:
-    const Generator & generator;
+    const Generator generator;
 
-    bool invoked = false;
+    std::size_t toInvoke = 1;
 };
 
 #endif //STREAM_GENACCESSOR_H

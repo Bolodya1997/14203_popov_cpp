@@ -23,8 +23,8 @@ public:
 
     ~RangeAccessor() = default;
 
-    RangeAccessor & operator=(const RangeAccessor &) = default;
-    RangeAccessor & operator=(RangeAccessor &&) noexcept = default;
+    RangeAccessor & operator=(const RangeAccessor &) = delete;
+    RangeAccessor & operator=(RangeAccessor &&) noexcept = delete;
 
     bool operator==(const RangeAccessor & other) {
         return pos == other.pos || accessor == other.accessor;
@@ -34,7 +34,7 @@ public:
         return pos != other.pos && accessor != other.accessor;
     }
 
-    value_type operator*() const {
+    value_type operator*() {
         return *accessor;
     }
 

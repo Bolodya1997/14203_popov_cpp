@@ -3,21 +3,6 @@
 
 #include <type_traits>
 
-struct BadType {
-    using const_iterator = BadType;
-
-    using difference_type = BadType;
-    using value_type = BadType;
-    using pointer = BadType;
-    using reference = BadType;
-    using iterator_category = BadType;
-};
-
-struct InfiniteStreamTag {
-};
-struct FiniteStreamTag {
-};
-
 template <class... Args>
 struct helper {
 };
@@ -80,58 +65,23 @@ struct _isGenerator<T,
 template <class T>
 inline constexpr bool isGenerator = _isGenerator<T>::value;
 
-//  isRangeModifier
+//  isModifier
 
 template <class T, class Accessor, class V = void>
-struct _isRangeModifier : std::false_type {
+struct _isModifier : std::false_type {
 };
 
 template <class T, class Accessor>
-struct _isRangeModifier<T, Accessor,
+struct _isModifier<T, Accessor,
         std::conditional_t<false,
-                decltype(std::declval<T>().rangeModify(std::declval<Accessor>(),
-                                                       std::declval<Accessor>())),
+                decltype(std::declval<T>().modify(std::declval<Accessor>(),
+                                                  std::declval<Accessor>())),
                 void>
 > : std::true_type {
 };
 
 template <class T, class Accessor>
-inline constexpr bool isRangeModifier = _isRangeModifier<T, Accessor>::value;
-
-//  isMapModifier
-
-template <class T, class In, class V = void>
-struct _isMapModifier : std::false_type {
-};
-
-template <class T, class In>
-struct _isMapModifier<T, In,
-                      std::conditional_t<false,
-                                         decltype(std::declval<T>().mapModify(std::declval<In>())),
-                                         void>
-                      > : std::true_type {
-};
-
-template <class T, class In>
-inline constexpr bool isMapModifier = _isMapModifier<T, In>::value;
-
-//  isGroupModifier
-
-template <class T, class Accessor, class V = void>
-struct _isGroupModifier : std::false_type {
-};
-
-template <class T, class Accessor>
-struct _isGroupModifier<T, Accessor,
-        std::conditional_t<false,
-                           decltype(std::declval<T>().groupModify(std::declval<Accessor>(),
-                                                                  std::declval<Accessor>())),
-                           void>
-> : std::true_type {
-};
-
-template <class T, class Accessor>
-inline constexpr bool isGroupModifier = _isGroupModifier<T, Accessor>::value;
+inline constexpr bool isModifier = _isModifier<T, Accessor>::value;
 
 //  isTerminator
 

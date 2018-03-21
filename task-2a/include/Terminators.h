@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "Utils.h"
+
 template <class IdentityFn, class Accumulator>
 class reduce {
 public:
@@ -15,14 +17,13 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        auto result = identity(*begin);
+        if (begin == end)
+            throw std::out_of_range("empty stream");
 
-        ++begin;
-        for (auto it = begin; it != end; ++it) {
-            result = accum(result, *it);
+        decltype(std::declval<IdentityFn>()(*begin)) result = identity(*begin);
+        while (++begin != end) {
+            result = accum(result, *begin);
         }
-
-        return result;
     }
 
 private:
@@ -41,14 +42,13 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        auto result = *begin;
+        if (begin == end)
+            throw std::out_of_range("empty stream");
 
-        ++begin;
-        for (auto it = begin; it != end; ++it) {
-            result = accum(result, *it);
+        decltype(*begin) result = *begin;
+        while (++begin != end) {
+            result = accum(result, *begin);
         }
-
-        return result;
     }
 
 private:
@@ -63,15 +63,9 @@ public:
     sum() = default;
 
     template <class Accessor, class StreamTag>
-    auto terminate(Accessor begin, Accessor end, StreamTag) const {
-        static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
-
-        auto res = *begin;
-        while (++begin != end) {
-            res += *begin;
-        }
-
-        return res;
+    auto terminate(Accessor begin, Accessor end, StreamTag tag) const {
+        return reduce([](auto a, auto b) { return a + b; })
+                .terminate(begin, end, tag);
     }
 };
 
@@ -123,7 +117,7 @@ public:
                 throw std::out_of_range("n is out of range");
         }
 
-        return *begin;
+        return begin;
     }
 
 private:
