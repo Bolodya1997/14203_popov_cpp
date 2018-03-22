@@ -20,10 +20,12 @@ public:
         if (begin == end)
             throw std::out_of_range("empty stream");
 
-        decltype(std::declval<IdentityFn>()(*begin)) result = identity(*begin);
+        auto result = identity(*begin);
         while (++begin != end) {
             result = accum(result, *begin);
         }
+
+        return result;
     }
 
 private:
@@ -45,10 +47,12 @@ public:
         if (begin == end)
             throw std::out_of_range("empty stream");
 
-        decltype(*begin) result = *begin;
+        auto result = *begin;
         while (++begin != end) {
             result = accum(result, *begin);
         }
+
+        return result;
     }
 
 private:
@@ -80,8 +84,12 @@ public:
     std::ostream & terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        for (auto ac = begin; ac != end; ++ac) {
-            os << *ac << delimiter;
+        if (begin == end)
+            return os;
+        os << *begin;
+
+        while (++begin != end) {
+            os << delimiter << *begin;
         }
 
         return os;
@@ -117,7 +125,7 @@ public:
                 throw std::out_of_range("n is out of range");
         }
 
-        return begin;
+        return *begin;
     }
 
 private:
