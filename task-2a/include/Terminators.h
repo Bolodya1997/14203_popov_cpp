@@ -114,7 +114,7 @@ public:
 
 class nth {
 public:
-    nth(size_t _n)
+    explicit nth(size_t _n)
             : n(_n) {
     }
 
