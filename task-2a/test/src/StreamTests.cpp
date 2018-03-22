@@ -95,6 +95,21 @@ TEST(Stream, InitializerListConstructor_Empty) {
     ASSERT_TRUE(res.empty());
 }
 
+//  GeneratorConstructor
+
+TEST(Stream, GeneratorConstructor_Int) {
+    int a = 0;
+    auto res = Stream([&a]() { return a++; }) >> ::get(5) >> to_vector();
+
+    ASSERT_THAT(res, ::testing::ElementsAreArray({ 0, 1, 2, 3, 4 }));
+}
+
+TEST(Stream, GeneratorConstructor_String) {
+    auto res = Stream([]() { return "kek"; }) >> ::get(2) >> to_vector();
+
+    ASSERT_THAT(res, ::testing::ElementsAreArray({ "kek", "kek" }));
+}
+
 //  VariadicConstructor
 
 TEST(Stream, VariadicConstructor_1) {
