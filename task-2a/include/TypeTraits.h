@@ -65,6 +65,11 @@ struct _isGenerator<T,
 template <class T>
 inline constexpr bool isGenerator = _isGenerator<T>::value;
 
+//  isType
+
+template <class T>
+inline constexpr bool isType = !isAccessor<T> && !isContainer<T> && !isGenerator<T>;
+
 //  isModifier
 
 template <class T, class Accessor, class V = void>
