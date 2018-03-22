@@ -54,19 +54,19 @@ class Stream {
 
 public:
     Stream(_Accessor _begin, _Accessor _end,
-           std::enable_if_t<isAccessor<_Accessor>, BadType> = BadType::instance)
+           std::enable_if_t<isAccessor<_Accessor>, BadType> = BAD_TYPE_INSTANCE)
             : begin(_begin),
               end(_end) {
     }
 
     explicit Stream(const _Container & _container,
-                    std::enable_if_t<isContainer<_Container>, BadType> = BadType::instance)
+                    std::enable_if_t<isContainer<_Container>, BadType> = BAD_TYPE_INSTANCE)
             : begin(_container.begin()),
               end(_container.end()) {
     }
 
     explicit Stream(_Container && _container,
-                    std::enable_if_t<isContainer<_Container>, BadType> = BadType::instance)
+                    std::enable_if_t<isContainer<_Container>, BadType> = BAD_TYPE_INSTANCE)
             : container(std::move(_container)),
               begin(container.begin()),
               end(container.end()) {
@@ -79,13 +79,13 @@ public:
     }
 
     explicit Stream(const Generator & _generator,
-                    std::enable_if_t<isGenerator<Generator>, BadType> = BadType::instance)
+                    std::enable_if_t<isGenerator<Generator>, BadType> = BAD_TYPE_INSTANCE)
             : begin(GenAccessor<Generator>(_generator)),
               end(GenAccessor<Generator>(_generator)) {
     }
 
     explicit Stream(Generator && _generator,
-                    std::enable_if_t<isGenerator<Generator>, BadType> = BadType::instance)
+                    std::enable_if_t<isGenerator<Generator>, BadType> = BAD_TYPE_INSTANCE)
             : generator(std::move(_generator)),
               begin(GenAccessor<Generator>(generator)),
               end(GenAccessor<Generator>(generator)) {
@@ -102,7 +102,6 @@ public:
     }
 
     Stream(const Stream &) = delete;
-
     Stream(Stream &&) noexcept = default;
 
     ~Stream() = default;
@@ -188,7 +187,7 @@ public:
     }
 
     Stream(const Stream &) = delete;
-    Stream(Stream &&) noexcept = delete;
+    Stream(Stream &&) noexcept = default;
 
     ~Stream() = default;
 

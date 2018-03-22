@@ -9,14 +9,9 @@ struct BadType {
     using pointer = BadType;
     using reference = BadType;
     using iterator_category = BadType;
-
-    static const BadType instance;
 };
 
-const BadType BadType::instance = BadType();
-
-struct GoodType {
-};
+static const BadType BAD_TYPE_INSTANCE = BadType();
 
 struct InfiniteStreamTag {
 };
