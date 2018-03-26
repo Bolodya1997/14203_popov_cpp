@@ -27,14 +27,14 @@ struct _isContainer<T,
 template <class T>
 inline constexpr bool isContainer = _isContainer<T>::value;
 
-//  isAccessor
+//  isIterator
 
 template <class T, class V = void>
-struct _isAccessor : std::false_type {
+struct _isIterator : std::false_type {
 };
 
 template <class T>
-struct _isAccessor<T,
+struct _isIterator<T,
                    std::conditional_t<false,
                                       helper<typename std::iterator_traits<T>::value_type,
                                              decltype(std::declval<T>() == std::declval<T>()),
@@ -46,7 +46,7 @@ struct _isAccessor<T,
 };
 
 template <class T>
-inline constexpr bool isAccessor = _isAccessor<T>::value;
+inline constexpr bool isIterator = _isIterator<T>::value;
 
 //  isGenerator
 
@@ -68,7 +68,7 @@ inline constexpr bool isGenerator = _isGenerator<T>::value;
 //  isType
 
 template <class T>
-inline constexpr bool isType = !isAccessor<T> && !isContainer<T> && !isGenerator<T>;
+inline constexpr bool isType = !isIterator<T> && !isContainer<T> && !isGenerator<T>;
 
 //  isModifier
 

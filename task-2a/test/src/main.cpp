@@ -1,9 +1,23 @@
 #include <gtest/gtest.h>
 
-using namespace std;
+#include <Stream.h>
+#include <map.h>
+#include <Terminators.h>
+
+using std::cout;
+using std::endl;
+
+using ::map;
 
 int main(int argc, char * * argv) {
-    ::testing::InitGoogleTest(&argc, argv);
+//    ::testing::InitGoogleTest(&argc, argv);
+//
+//    return RUN_ALL_TESTS();
+//    Stream(1, 2);
 
-    return RUN_ALL_TESTS();
+    int a = 0;
+    auto b = Stream([&a]() -> int & { return a; })
+            >> map([](int & x) -> int & { return ++x; })
+            >> nth(5);
+    cout << b << endl;
 }

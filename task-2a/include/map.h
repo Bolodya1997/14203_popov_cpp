@@ -13,13 +13,7 @@ public:
     template <class SAccessor>
     class Accessor {
     public:
-        using SuperValueType = typename std::iterator_traits<SAccessor>::value_type;
-
-        using difference_type = std::ptrdiff_t;
-        using value_type = decltype(std::declval<Transform>()(std::declval<SuperValueType>()));
-        using pointer = value_type *;
-        using reference = value_type &;
-        using iterator_category = std::forward_iterator_tag;
+        using Type = decltype(std::declval<Transform>()(std::declval<typename SAccessor::Type>()));
 
         Accessor() = delete;
 
@@ -36,15 +30,15 @@ public:
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
-        bool operator==(const Accessor & other) {
-            return sAccessor == other.sAccessor;
-        }
-
-        bool operator!=(const Accessor & other) {
+        bool operator!=(const Accessor & other) const {
             return sAccessor != other.sAccessor;
         }
 
-        value_type operator*() {
+        bool hasValue() {
+            return sAccessor.hasValue();
+        }
+
+        Type operator*() {
             return transform(*sAccessor);
         }
 

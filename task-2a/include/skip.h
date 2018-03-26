@@ -12,13 +12,10 @@ public:
     template <class SAccessor>
     class Accessor {
     public:
-        using difference_type = std::ptrdiff_t;
-        using value_type = typename std::iterator_traits<SAccessor>::value_type;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using iterator_category = std::forward_iterator_tag;
+        using Type = typename SAccessor::Type;
 
         Accessor() = delete;
+
         Accessor(const SAccessor & _sAccessor, const SAccessor & _end,
                  std::size_t _n)
                 : sAccessor(_sAccessor),
@@ -34,28 +31,21 @@ public:
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
-        bool operator==(const Accessor & other) {
-            skip();
-
-            return sAccessor == other.sAccessor;
-        }
-
-        bool operator!=(const Accessor & other) {
-            skip();
-
+        bool operator!=(const Accessor & other) const {
             return sAccessor != other.sAccessor;
         }
 
-        value_type operator*() {
-            skip();
+        bool hasValue() {
+            return n == 0 && sAccessor.hasValue();
+        }
 
+        Type operator*() {
             return *sAccessor;
         }
 
         Accessor & operator++() {
-            skip();
-
             ++sAccessor;
+            --n;
 
             return *this;
         }
@@ -65,12 +55,6 @@ public:
         SAccessor end;
 
         std::size_t n;
-
-        void skip() {
-            for (; n > 0 && sAccessor != end; --n) {
-                ++sAccessor;
-            }
-        }
     };
 
     skip() = delete;

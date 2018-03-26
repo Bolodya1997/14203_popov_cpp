@@ -2,6 +2,7 @@
 #define STREAM_FILTER_H
 
 #include <iterator>
+#include <memory>
 
 #include "Utils.h"
 
@@ -13,13 +14,10 @@ public:
     template <class SAccessor>
     class Accessor {
     public:
-        using difference_type = std::ptrdiff_t;
-        using value_type = typename std::iterator_traits<SAccessor>::value_type;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using iterator_category = std::forward_iterator_tag;
+        using Type = typename SAccessor::Type;
 
         Accessor() = delete;
+
         Accessor(const SAccessor & _sAccessor, const SAccessor & _end,
                  const Predicate & _predicate)
                 : sAccessor(_sAccessor),
@@ -30,36 +28,53 @@ public:
         Accessor(const Accessor &) = default;
         Accessor(Accessor &&) noexcept = default;
 
-        ~Accessor() = default;
+        ~Accessor() {
+            if constexpr (!std::is_reference_v<Type>)
+                delete valuePtr;
+            valuePtr = nullptr;
+        };
 
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
-        bool operator==(const Accessor & other) {
-            skip();
-
-            return sAccessor == other.sAccessor;
-        }
-
-        bool operator!=(const Accessor & other) {
-            skip();
-
+        bool operator!=(const Accessor & other) const {
             return sAccessor != other.sAccessor;
         }
 
-        value_type operator*() {
-            skip();
+        bool hasValue() {
+            if (!sAccessor.hasValue())
+                return false;
 
-            if (hasValue)
-                return value;
-            return *sAccessor;   //  sAccessor == end
+            if (valuePtr == nullptr) {
+                if constexpr (std::is_reference_v<Type>)
+                    valuePtr = &(*sAccessor);
+                else if (std::is_move_constructible_v<Type>)
+                    valuePtr = new Type(std::move(*sAccessor));
+                else
+                    valuePtr = new Type(*sAccessor);
+            }
+
+            return predicate(*valuePtr);
+        }
+
+        Type operator*() {
+            if (!hasValue())
+                throw std::runtime_error("filter::Accessor has no value");
+
+            if constexpr (std::is_reference_v<Type>)
+                return *valuePtr;
+            else if (std::is_move_constructible_v<Type>)
+                return std::move(*valuePtr);
+            else
+                return *valuePtr;
         }
 
         Accessor & operator++() {
-            skip();
-
             ++sAccessor;
-            hasValue = false;
+
+            if constexpr (!std::is_reference_v<Type>)
+                delete valuePtr;
+            valuePtr = nullptr;
 
             return *this;
         }
@@ -70,21 +85,7 @@ public:
 
         const Predicate & predicate;
 
-        bool hasValue = false;
-        value_type value;
-
-        void skip() {
-            if (hasValue || sAccessor == end)
-                return;
-
-            for (; sAccessor != end; ++sAccessor) {
-                value = *sAccessor;
-                if (predicate(value))
-                    break;
-            }
-
-            hasValue = sAccessor != end;
-        }
+        std::remove_reference<Type> * valuePtr = nullptr;
     };
 
     filter() = delete;
@@ -94,7 +95,7 @@ public:
     }
 
     explicit filter(Predicate && _predicate)
-            : predicate(_predicate) {
+            : predicate(std::move(_predicate)) {
     }
 
     template <class SAccessor>

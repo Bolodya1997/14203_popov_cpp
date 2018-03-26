@@ -2,6 +2,7 @@
 #define STREAM_GROUP_H
 
 #include <vector>
+#include <stdexcept>
 
 #include "Utils.h"
 
@@ -11,16 +12,13 @@ public:
 
     template <class SAccessor>
     class Accessor {
-    public:
-        using SuperValueType = typename std::iterator_traits<SAccessor>::value_type;
+        using SuperType = std::remove_reference<typename SAccessor::Type>;
 
-        using difference_type = std::ptrdiff_t;
-        using value_type = std::vector<SuperValueType>;
-        using pointer = value_type *;
-        using reference = value_type &;
-        using iterator_category = std::forward_iterator_tag;
+    public:
+        using Type = std::vector<SuperType>;
 
         Accessor() = delete;
+
         Accessor(const SAccessor & _sAccessor, const SAccessor & _end,
                  std::size_t _n)
                 : sAccessor(_sAccessor),
@@ -38,29 +36,41 @@ public:
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
-        bool operator==(const Accessor & other) {
-            return sAccessor == other.sAccessor;
-        }
-
-        bool operator!=(const Accessor & other) {
+        bool operator!=(const Accessor & other) const {
             return sAccessor != other.sAccessor;
         }
 
-        value_type operator*() {
-            auto res = std::vector<SuperValueType>();
+        bool hasValue() const {
+            return true;
+        }
 
-            auto it = sAccessor;
-            for (std::size_t i = 0; i < n && it != end; ++i, ++it) {
-                res.push_back(*it);
+        Type operator*() {
+            if (dereferenced)
+                throw std::runtime_error("double dereferencing group::Accessor");
+
+            auto res = std::vector<SuperType>();
+
+            for (std::size_t i = 0; i < n && sAccessor != end; ++sAccessor) {
+                if (sAccessor.hasValue()) {
+                    res.push_back(*sAccessor);
+
+                    ++i;
+                }
             }
+
+            dereferenced = true;
 
             return res;
         }
 
         Accessor & operator++() {
-            for (std::size_t i = 0; i < n && sAccessor != end; ++i) {
-                ++sAccessor;
+            if (!dereferenced) {
+                for (std::size_t i = 0; i < n && sAccessor != end; ++sAccessor) {
+                    if (sAccessor.hasValue())
+                        ++i;
+                }
             }
+            dereferenced = false;
 
             return *this;
         }
@@ -70,6 +80,8 @@ public:
         const SAccessor end;
 
         const std::size_t n;
+
+        bool dereferenced = false;
     };
 
     group() = delete;

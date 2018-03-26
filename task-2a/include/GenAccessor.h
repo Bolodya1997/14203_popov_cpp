@@ -6,11 +6,7 @@
 template <class Generator>
 class GenAccessor {
 public:
-    using difference_type = std::ptrdiff_t;
-    using value_type = decltype(std::declval<Generator>()());
-    using pointer = value_type *;
-    using reference = value_type &;
-    using iterator_category = std::forward_iterator_tag;
+    using Type = decltype(std::declval<Generator>()());
 
     GenAccessor() = delete;
     explicit GenAccessor(const Generator & generator)
@@ -22,18 +18,21 @@ public:
 
     ~GenAccessor() = default;
 
-    GenAccessor & operator=(const GenAccessor &) = default;
+    GenAccessor & operator=(const GenAccessor &) = delete;
     GenAccessor & operator=(GenAccessor &&) noexcept = delete;
 
-    bool operator==(const GenAccessor & other) {
-        return false;
-    }
-
-    bool operator!=(const GenAccessor & other) {
+    bool operator!=(const GenAccessor & other) const {
         return true;
     }
 
-    value_type operator*() {
+    bool hasValue() const {
+        return true;
+    }
+
+    Type operator*() {
+        if (toInvoke == 0)
+            throw std::runtime_error("double dereferencing GenAccessor");
+
         for (; toInvoke > 1; --toInvoke) {
             generator();
         }
