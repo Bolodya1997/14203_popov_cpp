@@ -36,6 +36,10 @@ public:
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
+        bool operator==(const Accessor & other) const {
+            return sAccessor == other.sAccessor;
+        }
+
         bool operator!=(const Accessor & other) const {
             return sAccessor != other.sAccessor;
         }

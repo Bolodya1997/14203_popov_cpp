@@ -20,6 +20,10 @@ public:
     IterAccessor & operator=(const IterAccessor &) = delete;
     IterAccessor & operator=(IterAccessor &&) = delete;
 
+    bool operator==(const IterAccessor & other) const {
+        return iterator == other.iterator;
+    }
+
     bool operator!=(const IterAccessor & other) const {
         return iterator != other.iterator;
     }
@@ -29,7 +33,10 @@ public:
     }
 
     Type operator*() const {
-        return *iterator;
+        if constexpr (std::is_const_v<Type>)
+            return Type(*iterator);
+        else
+            return *iterator;
     }
 
     IterAccessor & operator++() {

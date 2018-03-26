@@ -29,6 +29,10 @@ public:
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
+        bool operator==(const Accessor & other) const {
+            return pos == other.pos || sAccessor == other.sAccessor;
+        }
+
         bool operator!=(const Accessor & other) const {
             return pos != other.pos && sAccessor != other.sAccessor;
         }
@@ -38,7 +42,7 @@ public:
         }
 
         Type operator*() {
-            return *sAccessor;
+            return std::forward<Type>(*sAccessor);
         }
 
         Accessor & operator++() {

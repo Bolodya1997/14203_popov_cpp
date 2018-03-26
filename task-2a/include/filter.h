@@ -13,6 +13,8 @@ public:
 
     template <class SAccessor>
     class Accessor {
+        using NoRefType = std::remove_reference<typename SAccessor::Type>;
+
     public:
         using Type = typename SAccessor::Type;
 
@@ -37,6 +39,10 @@ public:
         Accessor & operator=(const Accessor &) = delete;
         Accessor & operator=(Accessor &&) noexcept = delete;
 
+        bool operator==(const Accessor & other) const {
+            return sAccessor == other.sAccessor;
+        }
+
         bool operator!=(const Accessor & other) const {
             return sAccessor != other.sAccessor;
         }
@@ -47,11 +53,9 @@ public:
 
             if (valuePtr == nullptr) {
                 if constexpr (std::is_reference_v<Type>)
-                    valuePtr = &(*sAccessor);
-                else if (std::is_move_constructible_v<Type>)
-                    valuePtr = new Type(std::move(*sAccessor));
+                    valuePtr = reinterpret_cast<NoRefType *>(&(*sAccessor));
                 else
-                    valuePtr = new Type(*sAccessor);
+                    valuePtr = reinterpret_cast<NoRefType *>(new Type(std::move(*sAccessor)));
             }
 
             return predicate(*valuePtr);
@@ -62,11 +66,9 @@ public:
                 throw std::runtime_error("filter::Accessor has no value");
 
             if constexpr (std::is_reference_v<Type>)
-                return *valuePtr;
-            else if (std::is_move_constructible_v<Type>)
-                return std::move(*valuePtr);
+                return reinterpret_cast<Type>(*valuePtr);
             else
-                return *valuePtr;
+                return std::move(*reinterpret_cast<Type *>(valuePtr));
         }
 
         Accessor & operator++() {
@@ -85,7 +87,7 @@ public:
 
         const Predicate & predicate;
 
-        std::remove_reference<Type> * valuePtr = nullptr;
+        NoRefType * valuePtr = nullptr;
     };
 
     filter() = delete;

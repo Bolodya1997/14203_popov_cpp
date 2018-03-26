@@ -21,6 +21,10 @@ public:
     GenAccessor & operator=(const GenAccessor &) = delete;
     GenAccessor & operator=(GenAccessor &&) noexcept = delete;
 
+    bool operator==(const GenAccessor & other) const {
+        return false;
+    }
+
     bool operator!=(const GenAccessor & other) const {
         return true;
     }

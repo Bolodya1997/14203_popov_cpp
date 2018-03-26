@@ -17,15 +17,20 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        if (begin == end)
-            throw std::out_of_range("empty stream");
+        while (!begin.hasValue()) {
+            if (begin == end)
+                throw std::out_of_range("empty stream");
 
-        auto result = identity(*begin);
-        while (++begin != end) {
-            result = accum(result, *begin);
+            ++begin;
         }
 
-        return result;
+        auto res = identity(*begin);
+        for (++begin; begin != end; ++begin) {
+            if (begin.hasValue())
+                res = accum(res, *begin);
+        }
+
+        return res;
     }
 
 private:
@@ -44,15 +49,20 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        if (begin == end)
-            throw std::out_of_range("empty stream");
+        while (!begin.hasValue()) {
+            if (begin == end)
+                throw std::out_of_range("empty stream");
 
-        auto result = *begin;
-        while (++begin != end) {
-            result = accum(result, *begin);
+            ++begin;
         }
 
-        return result;
+        auto res = *begin;
+        for (++begin; begin != end; ++begin) {
+            if (begin.hasValue())
+                res = accum(res, *begin);
+        }
+
+        return res;
     }
 
 private:
@@ -77,19 +87,24 @@ class print_to {
 public:
     explicit print_to(std::ostream & _os, const char * _delimiter = " ")
             : os(_os),
-              delimiter(_delimiter){
+              delimiter(_delimiter) {
     }
 
     template <class Accessor, class StreamTag>
     std::ostream & terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        if (begin == end)
-            return os;
-        os << *begin;
+        while (!begin.hasValue()) {
+            if (begin == end)
+                return os;
 
-        while (++begin != end) {
-            os << delimiter << *begin;
+            ++begin;
+        }
+
+        os << *begin;
+        for (++begin; begin != end; ++begin) {
+            if (begin.hasValue())
+                os << delimiter << *begin;
         }
 
         return os;
@@ -108,7 +123,14 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        return std::vector<typename std::iterator_traits<Accessor>::value_type>(begin, end);
+        auto res = std::vector<std::remove_reference_t<typename Accessor::Type>>();
+        for (; begin != end; ++begin) {
+            if (begin.hasValue()) {
+                    res.push_back(std::move<typename Accessor::Type>(*begin));
+            }
+        }
+
+        return res;
     }
 };
 
@@ -125,7 +147,7 @@ public:
                 throw std::out_of_range("n is out of range");
         }
 
-        return *begin;
+        return std::move(*begin);
     }
 
 private:
