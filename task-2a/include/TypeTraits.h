@@ -36,11 +36,7 @@ struct _isIterator : std::false_type {
 template <class T>
 struct _isIterator<T,
                    std::conditional_t<false,
-                                      helper<typename std::iterator_traits<T>::value_type,
-                                             decltype(std::declval<T>() == std::declval<T>()),
-                                             decltype(std::declval<T>() != std::declval<T>()),
-                                             decltype(*(std::declval<T>()))>,
-//                                           decltype(++(std::declval<T>()))>,
+                                      typename std::iterator_traits<T>::value_type,
                                       void>
                    > : std::true_type {
 };
@@ -107,5 +103,15 @@ struct _isTerminator<T, Accessor, StreamTag,
 
 template <class T, class Accessor, class StreamTag>
 inline constexpr bool isTerminator = _isTerminator<T, Accessor, StreamTag>::value;
+
+//  isConstRef
+
+template <class T>
+constexpr bool isConstRef = std::is_const_v<std::remove_reference_t<T>>;
+
+//  removeCVRef
+
+template <class T>
+using removeCVRef = std::remove_cv_t<std::remove_reference_t<T>>;
 
 #endif //STREAM_TYPETRAITS_H

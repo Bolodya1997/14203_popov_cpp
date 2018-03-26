@@ -14,7 +14,7 @@ TEST(sum, Int) {
 }
 
 TEST(sum, String) {
-    auto res = Stream(string("a"), string("bc"), string("d"), string("efg")) >> sum();
+    auto res = Stream({ string("a"), string("bc"), string("d"), string("efg") }) >> sum();
 
     ASSERT_EQ(res, "abcdefg");
 }

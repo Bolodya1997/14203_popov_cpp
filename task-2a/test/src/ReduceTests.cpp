@@ -3,6 +3,7 @@
 
 #include <Stream.h>
 #include <Terminators.h>
+#include <skip.h>
 
 using std::to_string;
 
@@ -15,7 +16,9 @@ TEST(reduce, NoIdentity_Sum) {
 }
 
 TEST(reduce, NoIdentity_Empty) {
-    ASSERT_THROW(Stream{} >> reduce([](auto a, auto) { return a; }), std::out_of_range);
+    auto s = Stream(1) >> skip(1);
+
+    ASSERT_THROW(s >> reduce([](auto a, auto) { return a; }), std::out_of_range);
 }
 
 //  Identity
@@ -28,7 +31,9 @@ TEST(reduce, Identity_Sum) {
 }
 
 TEST(reduce, Identity_Empty) {
-    ASSERT_THROW(Stream{} >> reduce([](auto x) { return x; },
+    auto s = Stream(1) >> skip(1);
+
+    ASSERT_THROW(s >> reduce([](auto x) { return x; },
                                     [](auto a, auto) { return a; }),
                  std::out_of_range);
 }

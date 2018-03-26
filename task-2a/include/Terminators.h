@@ -5,6 +5,18 @@
 
 #include "Utils.h"
 
+template <class Accessor>
+Accessor & firstOrThrow(Accessor & begin, Accessor & end,
+                  const char * message = "") {
+    while (begin != end) {
+        if (begin.hasValue())
+            return begin;
+        ++begin;
+    }
+
+    throw std::out_of_range(message);
+}
+
 template <class IdentityFn, class Accumulator>
 class reduce {
 public:
@@ -17,14 +29,7 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        while (!begin.hasValue()) {
-            if (begin == end)
-                throw std::out_of_range("empty stream");
-
-            ++begin;
-        }
-
-        auto res = identity(*begin);
+        auto res = identity(*firstOrThrow(begin, end, "empty stream"));
         for (++begin; begin != end; ++begin) {
             if (begin.hasValue())
                 res = accum(res, *begin);
@@ -49,14 +54,7 @@ public:
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        while (!begin.hasValue()) {
-            if (begin == end)
-                throw std::out_of_range("empty stream");
-
-            ++begin;
-        }
-
-        auto res = *begin;
+        auto res = *firstOrThrow(begin, end, "empty stream");
         for (++begin; begin != end; ++begin) {
             if (begin.hasValue())
                 res = accum(res, *begin);
@@ -94,14 +92,12 @@ public:
     std::ostream & terminate(Accessor begin, Accessor end, StreamTag) const {
         static_assert(std::is_same_v<StreamTag, FiniteStreamTag>);
 
-        while (!begin.hasValue()) {
-            if (begin == end)
-                return os;
-
-            ++begin;
+        try {
+            os << *firstOrThrow(begin, end, "");
+        } catch (std::out_of_range) {
+            return os;
         }
 
-        os << *begin;
         for (++begin; begin != end; ++begin) {
             if (begin.hasValue())
                 os << delimiter << *begin;
@@ -130,7 +126,13 @@ public:
             }
         }
 
-        return res;
+        if constexpr (std::is_same_v<std::string &, typename Accessor::Type>) {
+            for (auto && s : res) {
+                std::cout << s << std::endl;
+            }
+        }
+
+        return std::move(res);
     }
 };
 
@@ -142,12 +144,18 @@ public:
 
     template <class Accessor, class StreamTag>
     auto terminate(Accessor begin, Accessor end, StreamTag) const {
-        for (std::size_t i = 0; i < n; ++i) {
-            if (++begin == end)
-                throw std::out_of_range("n is out of range");
+        for (std::size_t i = 0; i < n && begin != end; ++begin) {
+            if (begin.hasValue())
+                ++i;
         }
 
-        return std::move(*begin);
+        while (begin != end) {
+            if (begin.hasValue())
+                return std::move(*begin);
+            ++begin;
+        }
+
+        throw std::out_of_range("n is out of range");
     }
 
 private:

@@ -16,10 +16,9 @@ public:
 
         Accessor() = delete;
 
-        Accessor(const SAccessor & _sAccessor, const SAccessor & _end,
+        Accessor(const SAccessor & _sAccessor,
                  std::size_t _n)
                 : sAccessor(_sAccessor),
-                  end(_end),
                   n(_n) {
         }
 
@@ -48,15 +47,16 @@ public:
         }
 
         Accessor & operator++() {
+            if (n > 0 && sAccessor.hasValue())
+                --n;
+
             ++sAccessor;
-            --n;
 
             return *this;
         }
 
     private:
         SAccessor sAccessor;
-        SAccessor end;
 
         std::size_t n;
     };
@@ -68,8 +68,8 @@ public:
 
     template <class SAccessor>
     auto modify(SAccessor begin, SAccessor end) const {
-        return std::pair{ Accessor(begin, end, n),
-                          Accessor(end, end, n) };
+        return std::pair{ Accessor(begin, n),
+                          Accessor(end, 0) };
     }
 
 private:

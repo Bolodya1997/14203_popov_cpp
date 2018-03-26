@@ -9,8 +9,10 @@ public:
     using Type = decltype(std::declval<Generator>()());
 
     GenAccessor() = delete;
+
     explicit GenAccessor(const Generator & generator)
             : generator(generator) {
+        std::cout << "kek" << std::endl;
     }
 
     GenAccessor(const GenAccessor &) = default;

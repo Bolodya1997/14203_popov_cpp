@@ -46,7 +46,9 @@ public:
         }
 
         Accessor & operator++() {
-            ++pos;
+            if (sAccessor.hasValue())
+                ++pos;
+
             ++sAccessor;
 
             return *this;

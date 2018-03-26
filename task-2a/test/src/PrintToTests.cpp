@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <string>
+
 #include <Stream.h>
 #include <Terminators.h>
 #include <skip.h>
@@ -10,13 +12,15 @@ using testing::internal::GetCapturedStdout;
 
 using std::ostream;
 using std::cout;
+using std::string;
 
 //  NoDelim
 
 TEST(print_to, NoDelim_Int) {
     CaptureStdout();
 
-    ostream & _cout = Stream(2, 10) >> print_to(cout);
+    ostream & _cout = Stream(2, 10)
+            >> print_to(cout);
 
     ASSERT_EQ(&_cout, &cout);
     ASSERT_EQ(GetCapturedStdout(), "2 10");
@@ -25,7 +29,8 @@ TEST(print_to, NoDelim_Int) {
 TEST(print_to, NoDelim_CString) {
     CaptureStdout();
 
-    ostream & _cout = Stream{ "one", "two", ":D" } >> print_to(cout);
+    ostream & _cout = Stream({ string("one"), string("two"), string(":D") })
+            >> print_to(cout);
 
     ASSERT_EQ(&_cout, &cout);
     ASSERT_EQ(GetCapturedStdout(), "one two :D");
@@ -47,7 +52,8 @@ TEST(print_to, NoDelim_Empty) {
 TEST(print_to, Delim_Int) {
     CaptureStdout();
 
-    ostream & _cout = Stream(2, 10) >> print_to(cout, "+");
+    ostream & _cout = Stream(2, 10)
+            >> print_to(cout, "+");
 
     ASSERT_EQ(&_cout, &cout);
     ASSERT_EQ(GetCapturedStdout(), "2+10");
@@ -56,7 +62,8 @@ TEST(print_to, Delim_Int) {
 TEST(print_to, Delim_CString) {
     CaptureStdout();
 
-    ostream & _cout = Stream{ "one", "two", ":D" } >> print_to(cout, "...");
+    ostream & _cout = Stream({ string("one"), string("two"), string(":D") })
+            >> print_to(cout, "...");
 
     ASSERT_EQ(&_cout, &cout);
     ASSERT_EQ(GetCapturedStdout(), "one...two...:D");

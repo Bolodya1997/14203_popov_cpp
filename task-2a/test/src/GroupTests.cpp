@@ -3,6 +3,7 @@
 
 #include <Stream.h>
 #include <group.h>
+#include <skip.h>
 #include <Terminators.h>
 
 using testing::ElementsAreArray;
@@ -12,11 +13,12 @@ TEST(group, Zero) {
 }
 
 TEST(group, Empty) {
-    auto res = Stream{}
+    auto res = Stream(1)
+            >> skip(1)
             >> group(10)
             >> to_vector();
 
-    ASSERT_TRUE(res.empty());
+    ASSERT_TRUE(res[0].empty());
 }
 
 TEST(group, Two) {

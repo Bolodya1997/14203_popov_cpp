@@ -1,8 +1,12 @@
 #ifndef STREAM_ITERACCESSOR_H
 #define STREAM_ITERACCESSOR_H
 
+#include "TypeTraits.h"
+
 template <class T, class Iterator>
 class IterAccessor {
+    using SuperType = decltype(*std::declval<Iterator>());
+
 public:
     using Type = T;
 
@@ -33,7 +37,7 @@ public:
     }
 
     Type operator*() const {
-        if constexpr (std::is_const_v<Type>)
+        if constexpr (isConstRef<SuperType>)
             return Type(*iterator);
         else
             return *iterator;

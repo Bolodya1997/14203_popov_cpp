@@ -13,7 +13,7 @@ public:
 
     template <class SAccessor>
     class Accessor {
-        using NoRefType = std::remove_reference<typename SAccessor::Type>;
+        using NoRefType = std::remove_reference_t<typename SAccessor::Type>;
 
     public:
         using Type = typename SAccessor::Type;

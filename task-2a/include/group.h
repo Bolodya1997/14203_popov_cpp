@@ -12,7 +12,7 @@ public:
 
     template <class SAccessor>
     class Accessor {
-        using SuperType = std::remove_reference<typename SAccessor::Type>;
+        using SuperType = std::remove_reference_t<typename SAccessor::Type>;
 
     public:
         using Type = std::vector<SuperType>;
@@ -56,7 +56,7 @@ public:
 
             for (std::size_t i = 0; i < n && sAccessor != end; ++sAccessor) {
                 if (sAccessor.hasValue()) {
-                    res.push_back(*sAccessor);
+                    res.push_back(std::move(*sAccessor));
 
                     ++i;
                 }
@@ -64,7 +64,7 @@ public:
 
             dereferenced = true;
 
-            return res;
+            return std::move(res);
         }
 
         Accessor & operator++() {

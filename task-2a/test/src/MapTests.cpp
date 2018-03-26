@@ -31,7 +31,7 @@ TEST(map, IntString) {
 }
 
 TEST(map, StringInt) {
-    auto res = Stream(string("a"), string("ab"), string("abccc"))
+    auto res = Stream({ string("a"), string("ab"), string("abccc") })
             >> map([](auto s) { return s.size(); })
             >> to_vector();
 

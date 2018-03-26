@@ -12,13 +12,17 @@ struct Noizy {
         std::cout << "copy constructor" << std::endl;
     }
 
-    Noizy(Noizy &&) noexcept {
-        std::cout << "move constructor" << std::endl;
+    Noizy(Noizy && other) noexcept {
+        other.alive = false;
     }
 
     ~Noizy() {
-        std::cout << "destructor" << std::endl;
+        if (alive)
+            std::cout << "destructor" << std::endl;
     }
+
+private:
+    bool alive = true;
 };
 
 #endif //STREAM_NOIZY_H
