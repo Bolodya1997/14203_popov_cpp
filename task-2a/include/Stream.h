@@ -369,19 +369,29 @@ explicit Stream(const Generator &&,
           InfiniteStreamTag>;
 
 template <class T, class... Vs>
-explicit Stream(T &&, Vs &&...)
+explicit Stream(T &&, T &&, T &&, Vs &&...)
 -> Stream<PackSpecialization,
-          std::enable_if_t<isType<T>,std::vector<std::remove_reference_t<T>>>,
+          std::vector<std::remove_reference_t<T>>,
+          BadGenerator,
+          IterAccessor<T &, typename std::vector<std::remove_reference_t<T>>::iterator>,
+          FiniteStreamTag>;
+
+template <class T, class... Vs>
+explicit Stream(T &&, T &&)
+-> Stream<std::enable_if_t<!isIterator<T>, PackSpecialization>,
+          std::vector<std::remove_reference_t<T>>,
           BadGenerator,
           IterAccessor<T &, typename std::vector<std::remove_reference_t<T>>::iterator>,
           FiniteStreamTag>;
 
 template <class T>
 explicit Stream(T &&)
--> Stream<PackSpecialization,
-          std::enable_if_t<isType<T>, std::vector<std::remove_reference_t<T>>>,
+-> Stream<std::enable_if_t<!isContainer<T> && !isGenerator<T>, PackSpecialization>,
+          std::vector<std::remove_reference_t<T>>,
           BadGenerator,
           IterAccessor<T &, typename std::vector<std::remove_reference_t<T>>::iterator>,
           FiniteStreamTag>;
+
+//  std::enable_if_t<isType<T>,std::vector<std::remove_reference_t<T>>>
 
 #endif //STREAM_STREAM_H

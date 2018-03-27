@@ -36,9 +36,14 @@ struct _isIterator : std::false_type {
 template <class T>
 struct _isIterator<T,
                    std::conditional_t<false,
-                                      typename std::iterator_traits<T>::value_type,
+                                      helper<decltype(*std::declval<T>()),
+                                             decltype(++std::declval<T>())>,
                                       void>
                    > : std::true_type {
+};
+
+template <class T>
+struct _isIterator<T *, void> : std::true_type {
 };
 
 template <class T>

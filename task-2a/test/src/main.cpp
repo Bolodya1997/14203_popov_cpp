@@ -31,11 +31,7 @@ int main(int argc, char * * argv) {
 //    for (int i = 0; i < 10; ++i) {
 //        v.push_back(make_unique<int>(0));
 //    }
-
-//    for (auto && ptr : v) {
-//        cout << *ptr << endl;
-//    }
-
+//
 //    int a = 0;
 //    Stream(std::move(v))
 //            >> map([&a](auto && ptr) -> auto && {
