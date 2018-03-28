@@ -16,19 +16,16 @@ public:
 
         Accessor() = delete;
 
-        Accessor(const SAccessor & _sAccessor,
-                 std::size_t _n)
+        Accessor(const SAccessor & _sAccessor, std::size_t _n)
                 : sAccessor(_sAccessor),
                   n(_n) {
         }
 
         Accessor(const Accessor &) = default;
-        Accessor(Accessor &&) noexcept = default;
 
         ~Accessor() = default;
 
         Accessor & operator=(const Accessor &) = delete;
-        Accessor & operator=(Accessor &&) noexcept = delete;
 
         bool operator==(const Accessor & other) const {
             return sAccessor == other.sAccessor;
@@ -62,12 +59,16 @@ public:
     };
 
     skip() = delete;
+
     explicit skip(const std::size_t _n)
             : n(_n) {
     }
 
+    skip(const skip &) = default;
+    skip(skip &&) noexcept = default;
+
     template <class SAccessor>
-    auto modify(SAccessor begin, SAccessor end) const {
+    auto modify(const SAccessor & begin, const SAccessor & end) const {
         return std::pair{ Accessor(begin, n),
                           Accessor(end, 0) };
     }

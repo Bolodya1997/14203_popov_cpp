@@ -10,18 +10,15 @@ public:
 
     GenAccessor() = delete;
 
-    explicit GenAccessor(const Generator & generator)
+    explicit GenAccessor(Generator & generator)
             : generator(generator) {
-        std::cout << "kek" << std::endl;
     }
 
     GenAccessor(const GenAccessor &) = default;
-    GenAccessor(GenAccessor &&) noexcept = default;
 
     ~GenAccessor() = default;
 
     GenAccessor & operator=(const GenAccessor &) = delete;
-    GenAccessor & operator=(GenAccessor &&) noexcept = delete;
 
     bool operator==(const GenAccessor & other) const {
         return false;
@@ -54,7 +51,7 @@ public:
     }
 
 private:
-    const Generator & generator;
+    Generator & generator;
 
     std::size_t toInvoke = 1;
 };

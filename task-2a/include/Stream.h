@@ -84,15 +84,14 @@ public:
 private:
     explicit Stream(Container && _container,
                     std::unique_ptr<Generator> && _generatorPtr,
-                    Accessor _begin,
-                    Accessor _end,
+                    const Accessor & _begin,
+                    const Accessor & _end,
                     Modifiers &&... _modifiers)
             : container(std::move(_container)),
               generatorPtr(std::move(_generatorPtr)),
               begin(_begin),
               end(_end),
               modifiers(std::move(_modifiers)...) {
-//        std::cout << __PRETTY_FUNCTION__ << std::endl;
     }
 
     explicit Stream(Container && _container)
@@ -101,7 +100,6 @@ private:
               begin(Accessor(container.begin())),
               end(Accessor(container.end())),
               modifiers() {
-//        std::cout << __PRETTY_FUNCTION__ << std::endl;
     }
 
     explicit Stream(Generator && _generator)
@@ -110,7 +108,6 @@ private:
               begin(Accessor(*generatorPtr)),
               end(Accessor(*generatorPtr)),
               modifiers() {
-//        std::cout << __PRETTY_FUNCTION__ << std::endl;
     }
 
     Container container;
@@ -151,7 +148,6 @@ public:
                     nullptr,
                     Accessor(begin),
                     Accessor(end)) {
-//        std::cout << "iterator" << std::endl;
     }
 };
 
@@ -181,13 +177,11 @@ public:
                     nullptr,
                     Accessor(container.begin()),
                     Accessor(container.end())) {
-//        std::cout << "ref container" << std::endl;
     }
 
     explicit Stream(Container && container,
                     BadType * = nullptr)
             : Super(std::move(container)) {
-//        std::cout << "move container" << std::endl;
     }
 };
 
@@ -213,7 +207,6 @@ public:
     template <class T>
     Stream(const std::initializer_list<T> & init)
             : Super(std::move(Container(init))) {
-//        std::cout << "initializer list" << std::endl;
     }
 };
 
@@ -236,19 +229,17 @@ class Stream<GeneratorSpecialization,
                          Accessor,
                          StreamTag>;
 public:
-    explicit Stream(const Generator & generator,
+    explicit Stream(Generator & generator,
                     BadType * = nullptr)
             : Super(Container(),
                     nullptr,
                     Accessor(generator),
                     Accessor(generator)) {
-//        std::cout << "ref generator" << std::endl;
     }
 
     explicit Stream(Generator && generator,
                     BadType * = nullptr)
             : Super(std::move(generator)) {
-        std::cout << "move generator" << std::endl;
     };
 };
 
@@ -275,7 +266,6 @@ public:
     explicit Stream(T && value, Vs &&... values)
             : Super(std::move(makeContainer(std::forward<T>(value),
                                             std::forward<Vs>(values)...))) {
-//        std::cout << "pack" << std::endl;
     }
 
 private:
@@ -351,7 +341,7 @@ Stream(std::initializer_list<T> &&)
           FiniteStreamTag>;
 
 template <class Generator>
-explicit Stream(const Generator &,
+explicit Stream(Generator &,
                 std::enable_if_t<isGenerator<Generator>, BadType *> = nullptr)
 -> Stream<GeneratorSpecialization,
           BadContainer,

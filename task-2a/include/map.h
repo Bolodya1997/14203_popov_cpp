@@ -17,18 +17,16 @@ public:
 
         Accessor() = delete;
 
-        Accessor(const SAccessor & _sAccessor, const Transform & _transform)
+        Accessor(const SAccessor & _sAccessor, Transform & _transform)
                 : sAccessor(_sAccessor),
                   transform(_transform) {
         }
 
         Accessor(const Accessor &) = default;
-        Accessor(Accessor &&) noexcept = default;
 
         ~Accessor() = default;
 
         Accessor & operator=(const Accessor &) = delete;
-        Accessor & operator=(Accessor &&) noexcept = delete;
 
         bool operator==(const Accessor & other) const {
             return sAccessor == other.sAccessor;
@@ -55,12 +53,12 @@ public:
     private:
         SAccessor sAccessor;
 
-        const Transform & transform;
+        Transform & transform;
     };
 
     map() = delete;
 
-    explicit map(const Transform & _transform)
+    explicit map(Transform & _transform)
             : transform(_transform) {
     }
 
@@ -68,14 +66,17 @@ public:
             : transform(std::move(_transform)) {
     }
 
+    map(const map &) = default;
+    map(map &&) noexcept = default;
+
     template <class SAccessor>
-    auto modify(SAccessor begin, SAccessor end) const {
+    auto modify(const SAccessor & begin, const SAccessor & end) {
         return std::pair{ Accessor<SAccessor>(begin, transform),
                           Accessor<SAccessor>(end, transform) };
     }
 
 private:
-    const Transform transform;
+    Transform transform;
 };
 
 #endif //STREAM_MAP_H

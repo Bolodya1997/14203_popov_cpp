@@ -18,7 +18,7 @@ TEST(group, Empty) {
             >> group(10)
             >> to_vector();
 
-    ASSERT_TRUE(res[0].empty());
+    ASSERT_TRUE(res.empty());
 }
 
 TEST(group, Two) {

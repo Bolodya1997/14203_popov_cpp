@@ -22,12 +22,10 @@ public:
         }
 
         Accessor(const Accessor &) = default;
-        Accessor(Accessor &&) noexcept = default;
 
         ~Accessor() = default;
 
         Accessor & operator=(const Accessor &) = delete;
-        Accessor & operator=(Accessor &&) noexcept = delete;
 
         bool operator==(const Accessor & other) const {
             return pos == other.pos || sAccessor == other.sAccessor;
@@ -66,8 +64,11 @@ public:
             : n(_n) {
     }
 
+    get(const get &) = default;
+    get(get &&) noexcept = default;
+
     template <class SAccessor>
-    auto modify(SAccessor begin, SAccessor end) const {
+    auto modify(const SAccessor & begin, const SAccessor & end) const {
         return std::pair{ Accessor(begin, 0),
                           Accessor(end, n) };
     }

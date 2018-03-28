@@ -28,13 +28,11 @@ public:
                 throw std::invalid_argument("n must be > 0");
         }
 
-        Accessor(const Accessor &) = default;
-        Accessor(Accessor &&) noexcept = default;
+        Accessor(const Accessor & other) = default;
 
         ~Accessor() = default;
 
         Accessor & operator=(const Accessor &) = delete;
-        Accessor & operator=(Accessor &&) noexcept = delete;
 
         bool operator==(const Accessor & other) const {
             return sAccessor == other.sAccessor;
@@ -44,8 +42,8 @@ public:
             return sAccessor != other.sAccessor;
         }
 
-        bool hasValue() const {
-            return true;
+        bool hasValue() {
+            return dereferenced || sAccessor.hasValue();
         }
 
         Type operator*() {
@@ -68,13 +66,16 @@ public:
         }
 
         Accessor & operator++() {
-            if (!dereferenced) {
+            if (dereferenced) {
+                dereferenced = false;
+            } else if (!sAccessor.hasValue()) {
+                ++sAccessor;
+            } else {
                 for (std::size_t i = 0; i < n && sAccessor != end; ++sAccessor) {
                     if (sAccessor.hasValue())
                         ++i;
                 }
             }
-            dereferenced = false;
 
             return *this;
         }
@@ -89,12 +90,16 @@ public:
     };
 
     group() = delete;
+
     explicit group(const std::size_t & _n)
             : n(_n) {
     }
 
+    group(const group &) = default;
+    group(group &&) noexcept = default;
+
     template <class SAccessor>
-    auto modify(SAccessor begin, SAccessor end) const {
+    auto modify(const SAccessor & begin, const SAccessor & end) const {
         return std::pair{ Accessor(begin, end, n),
                           Accessor(end, end, n) };
     }

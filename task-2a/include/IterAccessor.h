@@ -17,12 +17,10 @@ public:
     }
 
     IterAccessor(const IterAccessor &) = default;
-    IterAccessor(IterAccessor &&) noexcept = default;
 
     ~IterAccessor() = default;
 
     IterAccessor & operator=(const IterAccessor &) = delete;
-    IterAccessor & operator=(IterAccessor &&) = delete;
 
     bool operator==(const IterAccessor & other) const {
         return iterator == other.iterator;

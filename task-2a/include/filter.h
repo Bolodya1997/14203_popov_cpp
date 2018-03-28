@@ -20,15 +20,16 @@ public:
 
         Accessor() = delete;
 
-        Accessor(const SAccessor & _sAccessor, const SAccessor & _end,
-                 const Predicate & _predicate)
+        Accessor(const SAccessor & _sAccessor,
+                 Predicate & _predicate)
                 : sAccessor(_sAccessor),
-                  end(_end),
                   predicate(_predicate) {
         }
 
-        Accessor(const Accessor &) = default;
-        Accessor(Accessor &&) noexcept = default;
+        Accessor(const Accessor & other)
+                : sAccessor(other.sAccessor),
+                  predicate(other.predicate) {
+        }
 
         ~Accessor() {
             if constexpr (!std::is_reference_v<Type>)
@@ -37,7 +38,6 @@ public:
         };
 
         Accessor & operator=(const Accessor &) = delete;
-        Accessor & operator=(Accessor &&) noexcept = delete;
 
         bool operator==(const Accessor & other) const {
             return sAccessor == other.sAccessor;
@@ -83,16 +83,15 @@ public:
 
     private:
         SAccessor sAccessor;
-        SAccessor end;
 
-        const Predicate & predicate;
+        Predicate & predicate;
 
         NoRefType * valuePtr = nullptr;
     };
 
     filter() = delete;
 
-    explicit filter(const Predicate & _predicate)
+    explicit filter(Predicate & _predicate)
             : predicate(_predicate) {
     }
 
@@ -100,14 +99,17 @@ public:
             : predicate(std::move(_predicate)) {
     }
 
+    filter(const filter &) = default;
+    filter(filter &&) noexcept = default;
+
     template <class SAccessor>
-    auto modify(SAccessor begin, SAccessor end) const {
-        return std::pair{ Accessor<SAccessor>(begin, end, predicate),
-                          Accessor<SAccessor>(end, end, predicate) };
+    auto modify(SAccessor begin, SAccessor end) {
+        return std::pair{ Accessor<SAccessor>(begin, predicate),
+                          Accessor<SAccessor>(end, predicate) };
     }
 
 private:
-    const Predicate predicate;
+    Predicate predicate;
 };
 
 #endif //STREAM_FILTER_H

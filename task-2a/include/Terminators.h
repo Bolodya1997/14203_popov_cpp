@@ -122,13 +122,7 @@ public:
         auto res = std::vector<std::remove_reference_t<typename Accessor::Type>>();
         for (; begin != end; ++begin) {
             if (begin.hasValue()) {
-                    res.push_back(std::move<typename Accessor::Type>(*begin));
-            }
-        }
-
-        if constexpr (std::is_same_v<std::string &, typename Accessor::Type>) {
-            for (auto && s : res) {
-                std::cout << s << std::endl;
+                    res.push_back(std::move(*begin));
             }
         }
 

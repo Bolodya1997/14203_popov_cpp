@@ -3,16 +3,22 @@
 
 #include <vector>
 #include <list>
+#include <memory>
 
 #include <Stream.h>
 #include <Terminators.h>
 #include <get.h>
+
+#include "Traceable.h"
 
 using testing::ElementsAreArray;
 
 using std::vector;
 using std::string;
 using std::list;
+using std::unique_ptr;
+using std::make_unique;
+using std::move;
 
 //  IteratorConstructor
 
@@ -43,6 +49,45 @@ TEST(Stream, IteratorConstructor_Empty) {
     ASSERT_TRUE(res.empty());
 }
 
+TEST(Stream, IteratorConstructor_CopyTraceable) {
+    Traceable::Trace traces[2];
+    auto v = vector<Traceable>();
+    v.emplace_back(traces[0]);
+    v.emplace_back(traces[1]);
+
+    Stream(v.cbegin(), v.cend()) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 1u);
+    ASSERT_EQ(traces[0].destructed, 1u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 1u);
+    ASSERT_EQ(traces[1].destructed, 1u);
+}
+
+TEST(Stream, IteratorConstructor_MoveTraceable) {
+    Traceable::Trace traces[2];
+    auto v = vector<Traceable>();
+    v.emplace_back(traces[0]);
+    v.emplace_back(traces[1]);
+
+    Stream(v.begin(), v.end()) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 0u);
+    ASSERT_EQ(traces[0].destructed, 1u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 0u);
+    ASSERT_EQ(traces[1].destructed, 1u);
+}
+
+TEST(Stream, IteratorCounstructor_UniquePtr) {
+    auto v = vector<unique_ptr<int>>();
+    for (int i = 0; i < 10; ++i) {
+        v.push_back(make_unique<int>(0));
+    }
+
+    Stream(v.begin(), v.end()) >> to_vector();
+}
+
 //  ContainerConstructorCopy
 
 TEST(Stream, ContainerConstructorCopy_Vector) {
@@ -63,12 +108,27 @@ TEST(Stream, ContainerConstructorCopy_List) {
     ASSERT_THAT(res, ElementsAreArray({ "a", "kek", "hello" }));
 }
 
+TEST(Stream, ContainerConstructorCopy_Traceable) {
+    Traceable::Trace traces[2];
+    auto v = vector<Traceable>();
+    v.emplace_back(traces[0]);
+    v.emplace_back(traces[1]);
+
+    Stream(v) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 1u);
+    ASSERT_EQ(traces[0].destructed, 1u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 1u);
+    ASSERT_EQ(traces[1].destructed, 1u);
+}
+
 //  ContainerConstructorMove
 
 TEST(Stream, ContainerConstructorMove_Vector) {
     auto v = vector{ 1, 2, 10, -1, 228 };
 
-    auto res = Stream(std::move(v)) >> to_vector();
+    auto res = Stream(move(v)) >> to_vector();
 
     ASSERT_THAT(res, ElementsAreArray({ 1, 2, 10, -1, 228 }));
 }
@@ -76,9 +136,33 @@ TEST(Stream, ContainerConstructorMove_Vector) {
 TEST(Stream, ContainerConstructorMove_List) {
     auto l = list<string>{ "a", "kek", "hello" };
 
-    auto res = Stream(std::move(l)) >> to_vector();
+    auto res = Stream(move(l)) >> to_vector();
 
     ASSERT_THAT(res, ElementsAreArray({ "a", "kek", "hello" }));
+}
+
+TEST(Stream, ContainerConstructorMove_Traceable) {
+    Traceable::Trace traces[2];
+    auto v = vector<Traceable>();
+    v.emplace_back(traces[0]);
+    v.emplace_back(traces[1]);
+
+    Stream(move(v)) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 0u);
+    ASSERT_EQ(traces[0].destructed, 1u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 0u);
+    ASSERT_EQ(traces[1].destructed, 1u);
+}
+
+TEST(Stream, ContainerConstructorMove_UniquePtr) {
+    auto v = vector<unique_ptr<int>>();
+    for (int i = 0; i < 10; ++i) {
+        v.push_back(make_unique<int>(0));
+    }
+
+    Stream(move(v)) >> to_vector();
 }
 
 //  InitializerListConstructor
@@ -93,6 +177,18 @@ TEST(Stream, InitializerListConstructor_String) {
     auto res = Stream({ "The", "quick", "brown", "fox", "jumps", "..." }) >> to_vector();
 
     ASSERT_THAT(res, ElementsAreArray({ "The", "quick", "brown", "fox", "jumps", "..." }));
+}
+
+TEST(Stream, InitializerListConstructor_Traceable) {
+    Traceable::Trace traces[2];
+
+    Stream({ Traceable(traces[0]), Traceable(traces[1]) }) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 1u);
+    ASSERT_EQ(traces[0].destructed, 2u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 1u);
+    ASSERT_EQ(traces[1].destructed, 2u);
 }
 
 //  GeneratorConstructor
@@ -139,4 +235,33 @@ TEST(Stream, VariadicConstructor_String) {
                         string("fox"), string("jumps") }) >> to_vector();
 
     ASSERT_THAT(res, ElementsAreArray({ "The", "quick", "brown", "fox", "jumps" }));
+}
+
+TEST(Stream, VariadicConstructor_CopyTraceable) {
+    Traceable::Trace traces[2];
+    Traceable traceables[] = { Traceable(traces[0]), Traceable(traces[1]) };
+
+    Stream(traceables[0], traceables[1]) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 1u);
+    ASSERT_EQ(traces[0].destructed, 1u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 1u);
+    ASSERT_EQ(traces[1].destructed, 1u);
+}
+
+TEST(Stream, VariadicConstructor_MoveTraceable) {
+    Traceable::Trace traces[2];
+
+    Stream(Traceable(traces[0]), Traceable(traces[1])) >> to_vector();
+
+    ASSERT_EQ(traces[0].copyConstructed, 0u);
+    ASSERT_EQ(traces[0].destructed, 1u);
+
+    ASSERT_EQ(traces[1].copyConstructed, 0u);
+    ASSERT_EQ(traces[1].destructed, 1u);
+}
+
+TEST(Stream, VariadicConstructor_UniquePtr) {
+    Stream(make_unique<int>(0), make_unique<int>(0), make_unique<int>(0)) >> to_vector();
 }
